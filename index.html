@@ -3,234 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鬆弛熊圖鑑 - v6.2</title>
+    <title>鬆弛熊圖鑑 v6.3</title>
     <style>
         :root { --h-blue: #4fd1ed; --bg-cream: #fefddd; --purple: #554477; --brown: #5c4a3d; --border: #e8e8e8; }
-        body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 0; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 0; overflow-x: hidden; }
         
-        /* 頂部導覽 */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: white; border-bottom: 1px solid var(--border); position: fixed; top: 0; width: 100%; z-index: 1000; box-sizing: border-box; }
-        .header .logo { font-size: 16px; font-weight: bold; color: var(--purple); }
-        .menu-icon { font-size: 24px; cursor: pointer; color: var(--purple); padding: 5px; }
+        .logo { font-size: 16px; font-weight: bold; color: var(--purple); }
 
-        /* 側邊欄 */
-        .sidebar { position: fixed; top: 0; left: -100%; width: 80%; height: 100%; background: white; z-index: 3000; transition: 0.3s; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; box-sizing: border-box; }
+        /* 側邊欄多級選單 */
+        .sidebar { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: white; z-index: 3000; transition: 0.3s; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; box-sizing: border-box; }
         .sidebar.active { left: 0; }
-        .sidebar-item { padding: 15px 0; border-bottom: 1px solid var(--border); color: var(--purple); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-item { padding: 12px 0; border-bottom: 1px solid #f9f9f9; color: var(--purple); font-weight: bold; }
+        .sub-item { padding: 10px 20px; font-size: 14px; color: #666; border-bottom: 1px dotted #eee; }
 
-        /* 藍色 Hero 區域 */
-        .hero { background: var(--h-blue); padding: 70px 0 20px; text-align: center; }
-        .search-box { background: rgba(255,255,255,0.3); width: 85%; margin: 0 auto 15px; border-radius: 20px; padding: 8px 15px; border: 1px solid rgba(255,255,255,0.5); display: flex; align-items: center; }
-        .search-box input { background: none; border: none; outline: none; flex: 1; color: white; font-size: 14px; }
-        .search-box input::placeholder { color: rgba(255,255,255,0.8); }
-
-        .carousel { width: 90%; aspect-ratio: 16/10; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        /* 搜尋區 */
+        .hero { background: var(--h-blue); padding: 75px 15px 20px; text-align: center; }
+        .search-container { display: flex; flex-direction: column; gap: 8px; width: 95%; margin: 0 auto 15px; }
+        .search-box { background: white; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; }
+        .search-box input { border: none; outline: none; flex: 1; font-size: 14px; }
+        
+        /* 輪播 */
+        .carousel { width: 100%; aspect-ratio: 16/10; background: #fff; border-radius: 12px; overflow: hidden; position: relative; }
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.5s; top:0; left:0; }
         .carousel-img.active { opacity: 1; }
-        
-        /* 列表 */
-        .products-title { padding: 15px; font-size: 22px; font-weight: bold; color: var(--purple); }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px 40px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
         .card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        .card-info { padding: 8px; font-size: 13px; }
+        .card-info { padding: 8px; font-size: 12px; }
 
-        /* 黃色介紹區域 (圖二風) */
+        /* 黃色區域加大 */
         .profile { background: var(--bg-cream); padding: 50px 20px; text-align: center; color: var(--brown); }
-        .profile-title { font-size: 28px; font-weight: bold; margin-bottom: 20px; font-family: 'serif'; }
-        .profile-desc { font-size: 15px; line-height: 2; color: var(--purple); white-space: pre-wrap; margin-bottom: 30px; letter-spacing: 1px; }
-        .scrolling-wrapper { overflow: hidden; width: 100%; }
-        .scrolling-track { display: flex; gap: 12px; animation: scroll 25s linear infinite; width: max-content; }
-        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .scrolling-track { display: flex; gap: 20px; animation: scroll 30s linear infinite; width: max-content; }
+        .scrolling-track img { width: 180px; height: 180px; border-radius: 15px; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
 
-        /* 懸浮按鈕 */
-        .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--purple); color: #fff; border-radius: 50%; border: none; font-size: 32px; z-index: 1500; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--purple); color: #fff; border-radius: 50%; border: none; font-size: 32px; z-index: 1500; }
 
-        /* 彈窗 */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; }
         .overlay.active { display: block; }
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; width: 90%; max-height: 85%; border-radius: 15px; z-index: 4000; display: none; padding: 25px; overflow-y: auto; box-sizing: border-box; }
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; width: 92%; max-height: 90%; border-radius: 20px; z-index: 4000; display: none; padding: 20px; overflow-y: auto; box-sizing: border-box; }
         .modal.active { display: block; }
-        .modal h2 { margin-top: 0; color: var(--purple); font-size: 20px; }
-        .modal label { display: block; margin-top: 12px; font-size: 12px; color: #777; }
-        .modal input, .modal textarea, .modal select { width: 100%; margin: 5px 0 15px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+
+        /* 多圖預覽 */
+        .media-preview { display: flex; gap: 10px; overflow-x: auto; margin: 10px 0; }
+        .media-preview img, .media-preview video { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
+        
+        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="menu-icon" onclick="toggleSidebar(true)">☰</div>
-        <div class="logo">鬆弛熊圖鑑</div>
-        <div style="font-size: 20px;">👤</div>
+        <div onclick="toggleSidebar(true)" style="font-size:24px;">☰</div>
+        <div class="logo"> 鬆弛熊圖鑑 </div>
+        <div style="font-size:20px;">🐻</div>
     </div>
 
     <div class="sidebar" id="sb">
         <h2 style="color:var(--purple)">分類目錄</h2>
-        <div id="cateList" style="flex-grow:1; overflow-y:auto;"></div>
-        <div style="padding-top:15px; border-top:1px solid var(--border);">
-            <input type="text" id="newCate" placeholder="新分類名稱" style="width:70%; padding:8px; border:1px solid #ddd; border-radius:5px;">
-            <button onclick="addCate()" style="padding:8px 12px; background:var(--purple); color:#fff; border:none; border-radius:5px;">新增</button>
-        </div>
-        <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:12px; border:none; background:#f0f0f0; border-radius:8px;">關閉</button>
+        <div id="cateMenu" style="flex-grow:1; overflow-y:auto;"></div>
+        <button onclick="closeAll()" style="width:100%; padding:12px; background:#f0f0f0; border:none; border-radius:8px;">關閉</button>
     </div>
 
     <div class="overlay" id="ov" onclick="closeAll()"></div>
 
     <div class="hero">
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="搜尋收藏名稱..." oninput="searchItems()">
-            <span style="color:white;">🔍</span>
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="sk" placeholder="搜尋名稱..." oninput="doSearch()">
+                <span>🔍</span>
+            </div>
+            <input type="date" id="sd" onchange="doSearch()" style="margin:0; padding:8px; height:38px;">
         </div>
-        <div class="carousel" id="cp" onclick="openTopDetail()"></div>
-        <p style="font-size: 11px; color:rgba(255,255,255,0.8); margin-top:10px;">每 5 秒自動切換 · 點擊圖片查看詳情</p>
+        <div class="carousel" id="cp"></div>
     </div>
 
-    <div class="products-title" id="viewTitle">全部收藏</div>
     <div class="grid" id="grid"></div>
 
     <div class="profile">
-        <div class="profile-title">Rilakkuma™</div>
-        <div class="profile-desc">リラックマはいつもごゆるり
-マイペースな着ぐるみのクマ。
-やんちゃなコリラックマと
-働き者のキイロイトリと一緒に
-暮らし、はちみつの森に住む
-チャイロイコグマや
-そのお友達と仲良し。</div>
-        
-        <div class="scrolling-wrapper">
-            <div class="scrolling-track" id="st"></div>
-        </div>
+        <div style="font-size:24px; font-weight:bold; margin-bottom:15px;">Rilakkuma™</div>
+        <div style="font-size:14px; line-height:1.8; margin-bottom:30px;">リラックマはいつもごゆるり...</div>
+        <div style="overflow:hidden;"><div class="scrolling-track" id="st"></div></div>
     </div>
 
     <button class="fab" onclick="openAdd()">+</button>
 
-    <div class="modal" id="addM">
-        <h2>➕ 加入新資料</h2>
-        
-        <label>收藏名稱</label>
-        <input type="text" id="n" placeholder="例如：20週年限定櫻花熊">
-        
-        <label>日期 (顯示於列表)</label>
-        <input type="date" id="dateInput">
-        
-        <label>所屬分類</label>
-        <select id="sCate"></select>
-        
-        <label>詳細簡介</label>
-        <textarea id="d" placeholder="寫下關於它的故事..." rows="3"></textarea>
-        
-        <label>上傳圖片</label>
-        <input type="file" id="i" accept="image/*">
-        
-        <button onclick="save()" style="width:100%; padding:15px; background:var(--purple); color:#fff; border:none; border-radius:10px; font-weight:bold; margin-top:10px;">儲存到圖鑑</button>
-        <button onclick="closeAll()" style="width:100%; padding:10px; background:none; color:#999; border:none; margin-top:10px;">取消</button>
+    <div class="modal" id="formM">
+        <h2 id="formT">加入資料</h2>
+        <input type="hidden" id="editId">
+        <input type="text" id="fn" placeholder="名稱">
+        <input type="date" id="fd">
+        <select id="fs"></select>
+        <textarea id="fdesc" placeholder="簡介" rows="3"></textarea>
+        <label style="font-size:12px;">上傳圖片 (可多選)</label>
+        <input type="file" id="fi" accept="image/*" multiple>
+        <label style="font-size:12px;">上傳影片 (一個)</label>
+        <input type="file" id="fv" accept="video/*">
+        <button onclick="handleSave()" style="width:100%; padding:15px; background:var(--purple); color:#fff; border:none; border-radius:10px; font-weight:bold;">儲存資料</button>
     </div>
 
     <div class="modal" id="dtM">
         <div id="dtC"></div>
-        <button onclick="closeAll()" style="width:100%; padding:12px; background:#f0f0f0; border:none; border-radius:8px; margin-top:15px;">返回列表</button>
+        <div id="dtMedia" style="margin-top:15px;"></div>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button id="editBtn" style="flex:1; padding:12px; border:1px solid var(--purple); color:var(--purple); background:none; border-radius:8px;">編輯資料</button>
+            <button onclick="closeAll()" style="flex:1; padding:12px; background:#f0f0f0; border:none; border-radius:8px;">關閉</button>
+        </div>
     </div>
 
     <script>
-        let bears = JSON.parse(localStorage.getItem('bear_v62')) || [];
-        let cates = JSON.parse(localStorage.getItem('cate_v62')) || ['全部商品', '毛公仔', '文具', '生活雜貨'];
+        let items = JSON.parse(localStorage.getItem('bear_v63')) || [];
+        // 定義多級分類數據
+        const structure = {
+            "鬆弛熊": ["全部鬆弛熊", "黑白系列", "20週年系列", "經典系列"],
+            "小白熊": ["全部小白熊", "草莓系列", "貓咪系列"],
+            "毛公仔": ["掛件", "S號公仔", "大型公仔"],
+            "生活雜貨": ["文具", "餐具", "袋類"]
+        };
         let curSlide = 0;
 
         function init() {
-            const cl = document.getElementById('cateList');
-            const sc = document.getElementById('sCate');
-            cl.innerHTML = ''; sc.innerHTML = '';
-            cates.forEach((c, idx) => {
-                cl.innerHTML += `<div class="sidebar-item"><span onclick="filter('${c}')">${c}</span>${idx>0?`<span style="color:#ccc" onclick="delCate('${c}')">×</span>`:''}</div>`;
-                if(idx>0) sc.innerHTML += `<option value="${c}">${c}</option>`;
-            });
+            const menu = document.getElementById('cateMenu');
+            const select = document.getElementById('fs');
+            menu.innerHTML = '<div class="sidebar-item" onclick="filter(\'all\')">顯示全部收藏</div>';
+            select.innerHTML = '';
+
+            for (let main in structure) {
+                menu.innerHTML += `<div class="sidebar-item">▼ ${main}</div>`;
+                structure[main].forEach(sub => {
+                    menu.innerHTML += `<div class="sub-item" onclick="filter('${sub}')">${sub}</div>`;
+                    select.innerHTML += `<option value="${sub}">${main} - ${sub}</option>`;
+                });
+            }
             render();
         }
 
-        function toggleSidebar(show) {
-            document.getElementById('sb').classList.toggle('active', show);
-            document.getElementById('ov').classList.toggle('active', show);
-        }
-
-        function save() {
-            const n = document.getElementById('n').value;
-            const c = document.getElementById('sCate').value;
-            const d = document.getElementById('d').value;
-            const dt = document.getElementById('dateInput').value;
-            const f = document.getElementById('i').files[0];
-            if(!n || !f) return alert('請輸入名稱並選擇圖片！');
-
-            const r = new FileReader();
-            r.onload = e => {
-                bears.unshift({ id: Date.now(), name: n, cate: c, desc: d, date: dt, img: e.target.result });
-                localStorage.setItem('bear_v62', JSON.stringify(bears));
-                location.reload();
+        async function handleSave() {
+            const id = document.getElementById('editId').value;
+            const newItem = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('fn').value,
+                date: document.getElementById('fd').value,
+                cate: document.getElementById('fs').value,
+                desc: document.getElementById('fdesc').value,
+                images: id ? items.find(x => x.id == id).images : [],
+                video: id ? items.find(x => x.id == id).video : null
             };
-            r.readAsDataURL(f);
-        }
 
-        function render(list = bears) {
-            document.getElementById('grid').innerHTML = list.map(b => `
-                <div class="card" onclick="openDetail(${b.id})">
-                    <img src="${b.img}">
-                    <div class="card-info">
-                        <b>${b.name}</b><br>
-                        <span style="color:#999; font-size:11px;">${b.date || ''}</span>
-                    </div>
-                </div>
-            `).join('');
-            
-            // 輪播
-            const top3 = bears.slice(0, 3);
-            if(top3.length) {
-                document.getElementById('cp').innerHTML = top3.map((b, i) => `<img src="${b.img}" class="carousel-img ${i==curSlide?'active':''}" onclick="openDetail(${b.id})">`).join('');
+            const imgFiles = document.getElementById('fi').files;
+            if(imgFiles.length > 0) {
+                newItem.images = await Promise.all([...imgFiles].map(f => toBase64(f)));
+            }
+            const vidFile = document.getElementById('fv').files[0];
+            if(vidFile) newItem.video = await toBase64(vidFile);
+
+            if(!newItem.name || newItem.images.length == 0) return alert('請填寫名稱並上傳至少一張圖');
+
+            if(id) {
+                const idx = items.findIndex(x => x.id == id);
+                items[idx] = newItem;
             } else {
-                document.getElementById('cp').innerHTML = `<div style="padding:40px; color:#ccc;">加入資料後這裡會顯示輪播圖</div>`;
+                items.unshift(newItem);
             }
+            localStorage.setItem('bear_v63', JSON.stringify(items));
+            location.reload();
+        }
 
-            // 滾動畫廊
-            if(bears.length) {
-                document.getElementById('st').innerHTML = [...bears, ...bears].map(b => `<img src="${b.img}" style="width:110px; height:110px; border-radius:10px; object-fit:cover; box-shadow:0 2px 5px rgba(0,0,0,0.1);">`).join('');
+        function render(list = items) {
+            document.getElementById('grid').innerHTML = list.map(b => `
+                <div class="card" onclick="showDetail(${b.id})">
+                    <img src="${b.images[0]}">
+                    <div class="card-info"><b>${b.name}</b><br><small>${b.date}</small></div>
+                </div>`).join('');
+            
+            if(items.length > 0) {
+                document.getElementById('cp').innerHTML = items.slice(0,5).map((b,i) => 
+                    `<img src="${b.images[0]}" class="carousel-img ${i==0?'active':''}" onclick="showDetail(${b.id})">`).join('');
+                document.getElementById('st').innerHTML = [...items, ...items].map(b => `<img src="${b.images[0]}">`).join('');
             }
         }
 
-        function searchItems() {
-            const k = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = bears.filter(b => b.name.toLowerCase().includes(k));
-            render(filtered);
-            document.getElementById('viewTitle').innerText = k ? `搜尋結果: ${k}` : "全部收藏";
-        }
+        function showDetail(id) {
+            const b = items.find(x => x.id === id);
+            let mediaHTML = b.images.map(img => `<img src="${img}" style="width:100%; border-radius:10px; margin-bottom:10px;">`).join('');
+            if(b.video) mediaHTML += `<video src="${b.video}" controls style="width:100%; border-radius:10px;"></video>`;
 
-        function filter(c) {
-            document.getElementById('viewTitle').innerText = c;
-            render(c === '全部商品' ? bears : bears.filter(b => b.cate === c));
-            toggleSidebar(false);
-        }
-
-        function openDetail(id) {
-            const b = bears.find(x => x.id === id);
             document.getElementById('dtC').innerHTML = `
-                <img src="${b.img}" style="width:100%; border-radius:12px; margin-bottom:15px;">
-                <h2 style="margin:0; color:var(--purple);">${b.name}</h2>
-                <p style="color:#999; font-size:12px; margin:5px 0 15px;">日期：${b.date || '未設定'} | 分類：${b.cate}</p>
-                <div style="background:#f9f9f9; padding:15px; border-radius:10px; line-height:1.6; color:#555; font-size:14px; white-space:pre-wrap;">${b.desc || '暫無描述內容。'}</div>
-                <button onclick="delBear(${b.id})" style="margin-top:20px; color:#ff4444; background:none; border:none; width:100%; font-size:13px;">🗑️ 永久刪除此項</button>
+                <h2 style="color:var(--purple);margin-bottom:5px;">${b.name}</h2>
+                <p style="font-size:12px;color:#999;">日期：${b.date} | 分類：${b.cate}</p>
+                <div style="background:#f9f9f9;padding:15px;border-radius:10px;font-size:14px;line-height:1.6;white-space:pre-wrap;">${b.desc || '無簡介'}</div>
+                <div style="margin-top:15px;">${mediaHTML}</div>
+                <button onclick="deleteItem(${b.id})" style="width:100%;color:red;background:none;border:none;margin-top:15px;font-size:12px;">🗑️ 刪除此項</button>
             `;
+            document.getElementById('editBtn').onclick = () => openEdit(b);
             document.getElementById('dtM').classList.add('active');
             document.getElementById('ov').classList.add('active');
         }
 
-        function delBear(id) {
-            if(confirm('確定要刪除嗎？刪除後無法找回。')) {
-                bears = bears.filter(x => x.id !== id);
-                localStorage.setItem('bear_v62', JSON.stringify(bears));
-                location.reload();
-            }
+        function openEdit(item) {
+            document.getElementById('dtM').classList.remove('active');
+            document.getElementById('formT').innerText = "編輯資料";
+            document.getElementById('editId').value = item.id;
+            document.getElementById('fn').value = item.name;
+            document.getElementById('fd').value = item.date;
+            document.getElementById('fs').value = item.cate;
+            document.getElementById('fdesc').value = item.desc;
+            document.getElementById('formM').classList.add('active');
+        }
+
+        function doSearch() {
+            const key = document.getElementById('sk').value.toLowerCase();
+            const date = document.getElementById('sd').value;
+            const filtered = items.filter(b => {
+                const matchK = b.name.toLowerCase().includes(key);
+                const matchD = date ? b.date === date : true;
+                return matchK && matchD;
+            });
+            render(filtered);
+        }
+
+        function filter(c) {
+            render(c === 'all' ? items : items.filter(b => b.cate === c));
+            toggleSidebar(false);
+        }
+
+        function toggleSidebar(s) {
+            document.getElementById('sb').classList.toggle('active', s);
+            document.getElementById('ov').classList.toggle('active', s);
         }
 
         function openAdd() {
-            document.getElementById('addM').classList.add('active');
+            document.getElementById('formT').innerText = "加入資料";
+            document.getElementById('editId').value = "";
+            document.getElementById('formM').classList.add('active');
             document.getElementById('ov').classList.add('active');
         }
 
@@ -240,25 +247,21 @@
             toggleSidebar(false);
         }
 
-        function addCate() {
-            const val = document.getElementById('newCate').value.trim();
-            if(val && !cates.includes(val)) {
-                cates.push(val);
-                localStorage.setItem('cate_v62', JSON.stringify(cates));
-                init();
-                document.getElementById('newCate').value = '';
+        function deleteItem(id) {
+            if(confirm('確定刪除？')) {
+                items = items.filter(x => x.id !== id);
+                localStorage.setItem('bear_v63', JSON.stringify(items));
+                location.reload();
             }
         }
 
-        function delCate(c) {
-            if(confirm(`刪除分類「${c}」？`)) {
-                cates = cates.filter(x => x !== c);
-                localStorage.setItem('cate_v62', JSON.stringify(cates));
-                init();
-            }
-        }
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
 
-        // 自動輪播邏輯
         setInterval(() => {
             const imgs = document.querySelectorAll('.carousel-img');
             if(imgs.length < 2) return;
