@@ -3,333 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鬆弛熊圖鑑 - Rilakkuma Journal</title>
+    <title>鬆弛熊圖鑑 - 穩定版</title>
     <style>
-        :root { 
-            --header-blue: #4fd1ed; /* 參考圖一的頂部淡藍色 */
-            --bg-cream: #fefddd; /* 參考圖二的角色簡介淡黃色 */
-            --text-purple: #554477; /* 參考圖一、二的紫色調文字 */
-            --bear-brown: #5c4a3d; /* Rilakkuma Logo 棕色 */
-            --border: #e8e8e8;
-            --white: #ffffff;
-        }
-
-        /* 核心樣式 */
-        body { font-family: -apple-system, system-ui, sans-serif; background: #ffffff; margin: 0; padding: 0; color: #333; overflow-x: hidden; scroll-behavior: smooth; }
+        :root { --h-blue: #4fd1ed; --bg-cream: #fefddd; --purple: #554477; --brown: #5c4a3d; --border: #e8e8e8; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #fff; margin: 0; padding: 0; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         
-        /* 頂部導覽列 */
+        /* 頂部導覽 */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: white; border-bottom: 1px solid var(--border); position: fixed; top: 0; width: 100%; z-index: 1000; box-sizing: border-box; }
-        .header .logo { font-size: 16px; font-weight: bold; color: var(--text-purple); }
-        .header .menu-icon { font-size: 20px; cursor: pointer; color: var(--text-purple); }
+        .header .logo { font-size: 16px; font-weight: bold; color: var(--purple); }
+        .menu-icon { font-size: 24px; cursor: pointer; color: var(--purple); padding: 5px; }
 
-        /* ================= 區域 1: 官網風輪播 (Hero Carousel) ================= */
-        .hero-section { background-color: var(--header-blue); padding: 70px 0 20px; text-align: center; color: white; position: relative; }
-        
-        /* 搜尋框 (還原圖一) */
-        .search-container { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.2); width: 85%; max-width: 400px; margin: 0 auto 15px; border-radius: 20px; padding: 5px 15px; border: 1px solid rgba(255,255,255,0.4); }
-        .search-container input { background: none; border: none; outline: none; flex: 1; padding: 5px; font-size: 13px; color: white; }
-        .search-container input::placeholder { color: rgba(255,255,255,0.7); }
+        /* 側邊欄樣式 */
+        .sidebar { position: fixed; top: 0; left: -100%; width: 80%; height: 100%; background: white; z-index: 3000; transition: 0.3s; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; box-sizing: border-box; }
+        .sidebar.active { left: 0; }
+        .sidebar-item { padding: 15px 0; border-bottom: 1px solid var(--border); color: var(--purple); display: flex; justify-content: space-between; align-items: center; }
+        .del-cate { color: #ff4444; font-size: 12px; }
 
-        /* 輪播區域 */
-        .carousel-wrapper { width: 90%; max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; aspect-ratio: 16 / 10; overflow: hidden; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
-        .carousel-item { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s ease; }
-        .carousel-item.active { opacity: 1; }
-        .carousel-item img { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* 輪播控制 (還原圖一右下角按鈕) */
-        .carousel-controls { position: absolute; bottom: 15px; right: 20px; display: flex; gap: 8px; z-index: 10; }
-        .carousel-btn { background: rgba(255,255,255,0.8); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--header-blue); font-weight: bold; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-        /* 大標題 */
-        .products-title { padding: 15px; font-size: 24px; font-weight: bold; color: var(--text-purple); margin: 0; }
-
-        /* ================= 區域 2: 資料方格 (現有收藏) ================= */
-        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 15px 50px; }
-        .product-card { background: white; cursor: pointer; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-        .product-card .img-container { width: 100%; aspect-ratio: 1 / 1; background: #f5f5f5; }
-        .product-card img { width: 100%; height: 100%; object-fit: cover; }
-        .product-card .info { padding: 8px; text-align: left; }
-        .product-card h3 { font-size: 13px; margin: 0; color: var(--text-purple); line-height: 1.4; font-weight: 500; }
-        .product-card p { font-size: 11px; color: #999; margin: 2px 0; }
-
-        /* ================= 區域 3: 角色簡介 (圖二樣式) ================= */
-        .profile-section { background-color: var(--bg-cream); color: var(--bear-brown); padding: 40px 15px; text-align: center; }
-        .profile-logo { font-size: 28px; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; font-family: 'Copperplate', 'American Typewriter', sans-serif; }
-        .profile-text { font-size: 14px; color: var(--text-purple); line-height: 1.8; white-space: pre-wrap; margin-bottom: 30px; letter-spacing: 0.5px; }
-        
-        /* ================= 區域 4: 無限循環滾動圖片 (官網風) ================= */
-        .scrolling-wrapper { overflow: hidden; width: 100%; position: relative; margin-top: 20px; }
-        .scrolling-track { display: flex; gap: 15px; animation: scroll-left 40s linear infinite; width: max-content; }
-        .scrolling-track:hover { animation-play-state: paused; } /* 滑鼠懸停暫停 */
-        .scrolling-item { width: 120px; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex-shrink: 0; }
-        .scrolling-item img { width: 100%; height: 100%; object-fit: cover; }
-
-        @keyframes scroll-left { 
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); } /* 必須配合後面的資料複製才能無限循環 */
-        }
-
-        /* 彈窗樣式 (通用) */
+        /* 遮罩 */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; }
         .overlay.active { display: block; }
+
+        /* 首頁內容區 */
+        .hero { background: var(--h-blue); padding: 70px 0 20px; text-align: center; }
+        .carousel { width: 90%; aspect-ratio: 16/10; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; position: relative; }
+        .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.5s; top:0; left:0; }
+        .carousel-img.active { opacity: 1; }
         
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; width: 90%; max-width: 400px; border-radius: 15px; z-index: 2100; padding: 20px; box-sizing: border-box; max-height: 90%; overflow-y: auto; display: none; }
+        .products-title { padding: 15px; font-size: 24px; font-weight: bold; color: var(--purple); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px 80px; }
+        .card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card-info { padding: 8px; }
+
+        /* 角色簡介 (圖二風) */
+        .profile { background: var(--bg-cream); padding: 40px 15px; text-align: center; color: var(--brown); }
+        .scrolling-track { display: flex; gap: 10px; animation: scroll 20s linear infinite; width: max-content; }
+        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* 懸浮按鈕 */
+        .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--purple); color: #fff; border-radius: 50%; border: none; font-size: 28px; z-index: 1500; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        /* 彈窗 */
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; width: 90%; max-height: 85%; border-radius: 15px; z-index: 4000; display: none; padding: 20px; overflow-y: auto; box-sizing: border-box; }
         .modal.active { display: block; }
-
-        /* 表單樣式 */
-        .modal h2 { color: var(--text-purple); text-align: center; margin-top: 0; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        
-        /* 懸浮新增按鈕 (+) */
-        .fab-btn { position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; background: var(--text-purple); color: white; border: none; border-radius: 50%; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-        /* 詳情頁面彈窗 */
-        .detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .detail-content img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 15px; }
-        .detail-name { font-size: 18px; color: var(--text-purple); margin-bottom: 5px; font-weight: bold; }
-        .detail-desc { font-size: 14px; line-height: 1.6; color: #666; white-space: pre-wrap; padding: 10px; border: 1px dashed #ccc; border-radius: 8px; }
+        .modal input, .modal textarea, .modal select { width: 100%; margin: 8px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="menu-icon">☰</div>
-        <div class="logo">鬆弛熊圖鑑</div>
+        <div class="menu-icon" onclick="toggleSidebar(true)">☰</div>
+        <div class="logo">鬆弛熊</div>
         <div style="font-size: 20px;">👤</div>
     </div>
 
-    <div class="hero-section">
-        <div class="search-container">
-            <input type="text" id="search" placeholder="検索したい文言を入れてください" oninput="search()">
-            <span style="font-size: 16px;">🔍</span>
+    <div class="sidebar" id="sb">
+        <h2 style="color:var(--purple)">分類目錄</h2>
+        <div id="cateList" style="flex-grow:1; overflow-y:auto;"></div>
+        <div style="padding-top:15px; border-top:1px solid var(--border);">
+            <input type="text" id="newCate" placeholder="新分類名稱" style="width:70%; padding:8px;">
+            <button onclick="addCate()" style="padding:8px; background:var(--purple); color:#fff; border:none; border-radius:5px;">新增</button>
         </div>
-        <div class="carousel-wrapper" id="carouselWrapper">
-            <div id="carouselSlides">
-                </div>
-            <div class="carousel-controls">
-                <button class="carousel-btn" onclick="moveCarousel(-1)">⬅️</button>
-                <button class="carousel-btn" onclick="moveCarousel(1)">➡️</button>
-            </div>
-        </div>
-        <p style="font-size: 11px; margin-top: 5px; opacity: 0.7;">每 5 秒自動切換，可點擊查看詳情</p>
+        <button onclick="toggleSidebar(false)" style="margin-top:15px; width:100%; padding:10px; border:none; background:#eee; border-radius:8px;">關閉</button>
     </div>
 
-    <div class="products-title">全部收藏</div>
-    <div class="products-grid" id="grid"></div>
+    <div class="overlay" id="ov" onclick="closeAll()"></div>
 
-    <div class="profile-section">
-        <div class="profile-logo">Rilakkuma™</div>
-        <div class="profile-text">
-リラックマはいつもごゆるり
-マイペースな着ぐるみのクマ。
-やんちゃなコリラックマと
-働き者のキイロイトリと一緒に
-暮らし、はちみつの森に住む
-チャイロイコグマや
-そのお友達と仲良し。
-        </div>
-        
-        <div style="font-size:12px; color:var(--text-purple); opacity:0.7;">▼ 收藏畫廊無限循環滾動</div>
-        <div class="scrolling-wrapper">
-            <div class="scrolling-track" id="scrollingTrack">
-                </div>
-        </div>
+    <div class="hero">
+        <div class="carousel" id="cp" onclick="openTopDetail()"></div>
+        <p style="font-size: 11px; color:#fff; margin-top:8px;">每 5 秒自動切換 · 點擊查看詳情</p>
     </div>
 
-    <button class="fab-btn" onclick="toggleModal('add')">＋</button>
+    <div class="products-title" id="viewTitle">全部收藏</div>
+    <div class="grid" id="grid"></div>
 
-    <div class="overlay" id="overlay"></div>
-
-    <div class="modal form-group" id="addModal">
-        <h2>➕ 新增鬆弛熊圖鑑</h2>
-        <input type="text" id="itemName" placeholder="《現貨》20週年紀念">
-        <input type="date" id="itemDate">
-        <textarea id="itemDesc" placeholder="輸入收藏描述..."></textarea>
-        <input type="file" id="itemImg" accept="image/*">
-        <div style="display:flex; gap:10px; margin-top:15px">
-            <button onclick="toggleModal('add')" style="flex:1; background:#eee; border:none; padding:12px; border-radius:8px;">取消</button>
-            <button onclick="saveBear()" style="flex:1; background:var(--text-purple); color:white; border:none; padding:12px; border-radius:8px;">加入圖鑑</button>
-        </div>
+    <div class="profile">
+        <div style="font-size:24px; font-weight:bold; margin-bottom:15px;">Rilakkuma™</div>
+        <div style="font-size:14px; line-height:1.8; margin-bottom:20px;">リラックマはいつもごゆるり...</div>
+        <div style="overflow:hidden;"><div class="scrolling-track" id="st"></div></div>
     </div>
 
-    <div class="modal" id="detailModal">
-        <div class="detail-header">
-            <div onclick="toggleModal('detail')" style="cursor:pointer;">〈 返回列表</div>
-            <div onclick="saveDetailChange()" style="color:var(--text-purple); font-weight:bold; cursor:pointer;">儲存修改</div>
-        </div>
-        <div class="detail-content" id="detailContent"></div>
+    <button class="fab" onclick="openAdd()">+</button>
+
+    <div class="modal" id="addM">
+        <h2>➕ 加入收藏</h2>
+        <input type="text" id="n" placeholder="名稱 (例如: 櫻花限定)">
+        <select id="sCate"></select>
+        <textarea id="d" placeholder="文字簡介..." rows="3"></textarea>
+        <input type="file" id="i" accept="image/*">
+        <button onclick="save()" style="width:100%; padding:12px; background:var(--purple); color:#fff; border:none; border-radius:8px; margin-top:10px;">儲存</button>
+    </div>
+
+    <div class="modal" id="dtM">
+        <div id="dtC"></div>
+        <button onclick="closeAll()" style="width:100%; padding:10px; margin-top:10px; border:none; background:#eee; border-radius:8px;">返回列表</button>
     </div>
 
     <script>
-        // 資料初始化
-        let bears = JSON.parse(localStorage.getItem('bear_v7_carousel')) || [];
-        let currentDetailId = null;
-        let carouselInterval;
-        let currentSlideIndex = 0;
+        let bears = JSON.parse(localStorage.getItem('bear_v61')) || [];
+        let cates = JSON.parse(localStorage.getItem('cate_v61')) || ['全部商品', '毛公仔', '文具'];
+        let curSlide = 0;
 
-        // --- 功能 1: 資料渲染 & 初始化 --------------------------------
+        // 初始化
+        function init() {
+            const cl = document.getElementById('cateList');
+            const sc = document.getElementById('sCate');
+            cl.innerHTML = ''; sc.innerHTML = '';
+            cates.forEach((c, idx) => {
+                cl.innerHTML += `<div class="sidebar-item"><span onclick="filter('${c}')">${c}</span>${idx>0?`<span class="del-cate" onclick="delCate('${c}')">❌</span>`:''}</div>`;
+                if(idx>0) sc.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+            render();
+        }
 
-        function saveBear() {
-            const name = document.getElementById('itemName').value;
-            const date = document.getElementById('itemDate').value;
-            const desc = document.getElementById('itemDesc').value;
-            const file = document.getElementById('itemImg').files[0];
+        function toggleSidebar(show) {
+            document.getElementById('sb').classList.toggle('active', show);
+            document.getElementById('ov').classList.toggle('active', show);
+        }
 
-            if(!name) return alert("名稱是必須的哦！");
+        function addCate() {
+            const val = document.getElementById('newCate').value.trim();
+            if(val && !cates.includes(val)) {
+                cates.push(val);
+                localStorage.setItem('cate_v61', JSON.stringify(cates));
+                init();
+                document.getElementById('newCate').value = '';
+            }
+        }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const id = Date.now();
-                bears.unshift({ id, name, date, desc, img: e ? e.target.result : '' });
-                localStorage.setItem('bear_v7_carousel', JSON.stringify(bears));
-                location.reload(); // 重新整理以更新輪播
+        function delCate(c) {
+            if(confirm('確定刪除分類？')) {
+                cates = cates.filter(x => x !== c);
+                localStorage.setItem('cate_v61', JSON.stringify(cates));
+                init();
+            }
+        }
+
+        function save() {
+            const n = document.getElementById('n').value;
+            const c = document.getElementById('sCate').value;
+            const d = document.getElementById('d').value;
+            const f = document.getElementById('i').files[0];
+            if(!n || !f) return alert('請填寫名稱並上傳圖片');
+
+            const r = new FileReader();
+            r.onload = e => {
+                bears.unshift({ id: Date.now(), name: n, cate: c, desc: d, img: e.target.result });
+                localStorage.setItem('bear_v61', JSON.stringify(bears));
+                location.reload();
             };
-            if(file) reader.readAsDataURL(file); else reader.onload(null);
+            r.readAsDataURL(f);
         }
 
-        // --- 功能 2: 區域 1 首頁大輪播邏輯 (圖一風) ---------------------
-
-        function renderCarousel() {
-            const slides = document.getElementById('carouselSlides');
-            // 只取最新的 3 筆資料放輪播
-            const latestBears = bears.slice(0, 3);
-            if(latestBears.length === 0) {
-                slides.innerHTML = `<div style="padding:50px; text-align:center; color:#999; font-size:12px;">加入資料後<br>這裡會出現最新的熊熊哦！</div>`;
-                return;
+        function render(list = bears) {
+            document.getElementById('grid').innerHTML = list.map(b => `<div class="card" onclick="openDetail(${b.id})"><img src="${b.img}"><div class="card-info"><b>${b.name}</b></div></div>`).join('');
+            
+            // 輪播 & 滾動
+            const top3 = bears.slice(0, 3);
+            if(top3.length) {
+                document.getElementById('cp').innerHTML = top3.map((b, i) => `<img src="${b.img}" class="carousel-img ${i==0?'active':''}">`).join('');
+                document.getElementById('st').innerHTML = [...bears, ...bears].map(b => `<img src="${b.img}" style="width:100px; height:100px; border-radius:8px; object-fit:cover;">`).join('');
             }
-            slides.innerHTML = latestBears.map((item, index) => `
-                <div class="carousel-item ${index === 0 ? 'active' : ''}" onclick="openDetail(${item.id})">
-                    <img src="${item.img || ''}">
-                </div>
-            `).join('');
-            
-            // 啟動 5 秒自動循環
-            startCarouselInterval();
         }
 
-        function moveCarousel(direction) {
-            clearInterval(carouselInterval);
-            const items = document.querySelectorAll('.carousel-item');
-            if(items.length === 0) return;
-
-            items[currentSlideIndex].classList.remove('active');
-            currentSlideIndex = (currentSlideIndex + direction + items.length) % items.length;
-            items[currentSlideIndex].classList.add('active');
-
-            startCarouselInterval(); // 重置時間計數
-        }
-
-        function startCarouselInterval() {
-            clearInterval(carouselInterval);
-            carouselInterval = setInterval(() => {
-                moveCarousel(1); // 每 5 秒自動往下一個
-            }, 5000);
-        }
-
-        // --- 功能 3: 區域 4 無限滾動邏輯 (圖二風) ------------------------
-
-        function renderScrolling() {
-            const track = document.getElementById('scrollingTrack');
-            const scrollingData = bears; // 所有收藏都在這裡滾動
-            if(scrollingData.length === 0) return;
-            
-            // 關鍵！複製一份資料以實現無縫循環滾動
-            const items = [...scrollingData, ...scrollingData]; 
-            
-            track.innerHTML = items.map(item => `
-                <div class="scrolling-item" onclick="openDetail(${item.id})">
-                    <img src="${item.img || ''}">
-                </div>
-            `).join('');
-            
-            // 根據圖片數量動態調整滾動時間 (保持均勻速度)
-            const speed = items.length * 3; // 數量越多時間越長
-            track.style.animationDuration = speed + 's';
-        }
-
-        // --- 功能 4: 列表渲染 & 功能性的東西 -------------------------
-
-        function renderGrid(list) {
-            const grid = document.getElementById('grid');
-            if(list.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/3; text-align:center; padding:50px; color:#999;">尚未加入任何收藏。</div>`;
-                return;
-            }
-            grid.innerHTML = list.map(item => `
-                <div class="product-card" onclick="openDetail(${item.id})">
-                    <div class="img-container"><img src="${item.img || ''}"></div>
-                    <div class="info">
-                        <h3>${item.name}</h3>
-                        <p>${item.date || ''}</p>
-                    </div>
-                </div>
-            `).join('');
+        function filter(c) {
+            document.getElementById('viewTitle').innerText = c;
+            render(c === '全部商品' ? bears : bears.filter(b => b.cate === c));
+            toggleSidebar(false);
         }
 
         function openDetail(id) {
-            // 關閉所有可能開啟的彈窗
-            toggleModal('add', false);
-            
-            const item = bears.find(b => b.id === id);
-            currentDetailId = id;
-            const detailContent = document.getElementById('detailContent');
-            detailContent.innerHTML = `
-                <img src="${item.img}">
-                <div style="padding:10px;">
-                    <div class="detail-name">${item.name}</div>
-                    <div style="font-size:12px; color:#999; margin-bottom:15px;">日期：${item.date || '未設定'}</div>
-                    <div class="detail-desc" contenteditable="true" id="editDesc">${item.desc || '暫無描述，點擊這裡輸入文字...'}</div>
-                    <button onclick="deleteBear(${id})" style="margin-top:30px; color:red; background:none; border:none; width:100%; text-align:center;">永久刪除此收藏</button>
-                </div>
-            `;
-            toggleModal('detail', true);
+            const b = bears.find(x => x.id === id);
+            document.getElementById('dtC').innerHTML = `<img src="${b.img}" style="width:100%; border-radius:10px;"><h2 style="color:var(--purple)">${b.name}</h2><p style="color:#666">${b.desc || '暫無簡介'}</p><p style="font-size:12px;color:#999">分類：${b.cate}</p><button onclick="delBear(${b.id})" style="color:red; background:none; border:none; width:100%; margin-top:20px;">🗑️ 刪除此收藏</button>`;
+            document.getElementById('dtM').classList.add('active');
+            document.getElementById('ov').classList.add('active');
         }
 
-        function saveDetailChange() {
-            const newDesc = document.getElementById('editDesc').innerText;
-            const index = bears.findIndex(b => b.id === currentDetailId);
-            bears[index].desc = newDesc;
-            localStorage.setItem('bear_v7_carousel', JSON.stringify(bears));
-            alert("簡介已成功儲存！");
-        }
-
-        function deleteBear(id) {
-            if(confirm("確定要永久刪除這個收藏嗎？此操作不可逆哦！")) {
-                bears = bears.filter(b => b.id !== id);
-                localStorage.setItem('bear_v7_carousel', JSON.stringify(bears));
-                location.reload(); // 重新整理以刷新所有畫面
+        function delBear(id) {
+            if(confirm('確定刪除？')) {
+                bears = bears.filter(x => x.id !== id);
+                localStorage.setItem('bear_v61', JSON.stringify(bears));
+                location.reload();
             }
         }
 
-        function search() {
-            const k = document.getElementById('search').value.toLowerCase();
-            renderGrid(bears.filter(i => i.name.toLowerCase().includes(k)));
+        function openAdd() {
+            document.getElementById('addM').classList.add('active');
+            document.getElementById('ov').classList.add('active');
         }
 
-        function toggleModal(modalType, force = null) {
-            const overlay = document.getElementById('overlay');
-            const addModal = document.getElementById('addModal');
-            const detailModal = document.getElementById('detailModal');
-            
-            // 隱藏所有
-            overlay.classList.remove('active');
-            addModal.classList.remove('active');
-            detailModal.classList.remove('active');
-            
-            // 開啟指定的
-            if (force === true || (force === null && (modalType === 'add' && !addModal.classList.contains('active')) || (modalType === 'detail' && !detailModal.classList.contains('active')))) {
-                overlay.classList.add('active');
-                if (modalType === 'add') addModal.classList.add('active');
-                if (modalType === 'detail') detailModal.classList.add('active');
-            }
-            
-            overlay.onclick = () => toggleModal('close'); // 遮罩層點擊可關閉
+        function closeAll() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            document.getElementById('ov').classList.remove('active');
+            toggleSidebar(false);
         }
 
-        // 核心啟動 !!!
-        renderCarousel(); // 初始化首頁大輪播
-        renderGrid(bears); // 初始化列表
-        renderScrolling(); // 初始化無限滾動
+        // 自動輪播
+        setInterval(() => {
+            const imgs = document.querySelectorAll('.carousel-img');
+            if(imgs.length < 2) return;
+            imgs[curSlide].classList.remove('active');
+            curSlide = (curSlide + 1) % imgs.length;
+            imgs[curSlide].classList.add('active');
+        }, 5000);
+
+        init();
     </script>
 </body>
 </html>
