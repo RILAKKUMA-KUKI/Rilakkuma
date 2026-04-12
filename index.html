@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鬆弛熊圖鑑</title>
+    <title>鬆弛熊 </title>
     <style>
-        :root { --h-blue: #4fd1ed; --bg-cream: #fefddd; --purple: #554477; --brown: #5c4a3d; --border: #e8e8e8; }
+        :root { --h-blue: #4fd1ed; --bg-cream: #fefddd; --purple: #554477; --brown: #5c4a3d; --border: #e8e8e8; --red: #ff5e5e; }
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 0; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         
         /* Header */
@@ -13,38 +13,42 @@
         .header .logo { font-size: 16px; font-weight: bold; color: var(--purple); }
         .menu-icon { font-size: 24px; cursor: pointer; color: var(--purple); padding: 5px; }
 
-        /* Sidebar & Multi-level Menu */
+        /* Sidebar & Menu with X */
         .sidebar { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: white; z-index: 3000; transition: 0.3s; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); overflow-y: auto; box-sizing: border-box; }
         .sidebar.active { left: 0; }
-        .sidebar h2 { color: var(--purple); margin-top: 0; }
         .menu-group { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .main-cate { font-weight: bold; padding: 10px 0; color: var(--purple); display: flex; justify-content: space-between; }
-        .sub-cate { padding: 8px 20px; font-size: 14px; color: #666; border-left: 2px solid var(--h-blue); margin: 5px 0; }
+        .main-cate { font-weight: bold; padding: 10px 0; color: var(--purple); display: flex; justify-content: space-between; align-items: center; }
+        .sub-cate { padding: 8px 10px; font-size: 14px; color: #666; display: flex; justify-content: space-between; align-items: center; margin-left: 10px; border-bottom: 1px dashed #eee; }
+        .del-btn { color: #ccc; cursor: pointer; padding: 5px; font-size: 18px; line-height: 1; }
+        .del-btn:hover { color: var(--red); }
 
-        /* Search & Hero */
+        /* Optimized Search Bar */
         .hero { background: var(--h-blue); padding: 70px 15px 20px; text-align: center; }
-        .search-area { background: white; border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .search-area input { width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-bottom: 8px; box-sizing: border-box; }
-        .date-filter { display: flex; gap: 5px; align-items: center; font-size: 12px; color: #666; }
+        .search-container { background: white; border-radius: 25px; display: flex; align-items: center; padding: 5px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .search-container input { border: none; flex: 1; padding: 10px; font-size: 14px; outline: none; }
+        .date-toggle { font-size: 20px; cursor: pointer; padding: 5px; }
+        .date-panel { display: none; background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; animation: fadeIn 0.3s; }
+        .date-panel.active { display: block; }
+        .date-inputs { display: flex; justify-content: center; align-items: center; gap: 10px; font-size: 13px; color: #666; }
 
         .carousel { width: 100%; aspect-ratio: 16/10; background: #fff; border-radius: 12px; overflow: hidden; position: relative; }
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.5s; top:0; left:0; }
         .carousel-img.active { opacity: 1; }
 
-        /* Grid */
+        /* Grid & Cards */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px 15px 40px; }
         .card { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         .card-info { padding: 10px; font-size: 13px; }
 
-        /* Yellow Profile (Enlarged Images) */
+        /* Yellow Profile (Enlarged) */
         .profile { background: var(--bg-cream); padding: 60px 20px; text-align: center; color: var(--brown); }
         .profile-desc { font-size: 15px; line-height: 1.8; white-space: pre-wrap; margin-bottom: 40px; }
         .scrolling-track { display: flex; gap: 20px; animation: scroll 30s linear infinite; width: max-content; }
-        .scrolling-track img { width: 180px; height: 180px; border-radius: 15px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .scrolling-track img { width: 220px; height: 220px; border-radius: 15px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-        /* UI Elements */
+        /* Modal UI */
         .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--purple); color: #fff; border-radius: 50%; border: none; font-size: 30px; z-index: 1500; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; display:none; }
         .overlay.active { display:block; }
@@ -54,28 +58,29 @@
         .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; }
         
         .btn-main { width: 100%; padding: 15px; background: var(--purple); color: white; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; }
-        .btn-edit { background: #4caf50; margin-top: 10px; }
-        
         .img-preview-group { display: flex; gap: 5px; overflow-x: auto; margin: 10px 0; }
-        .img-preview-group img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; }
+        .img-preview-group img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div class="menu-icon" onclick="toggleSidebar(true)">☰</div>
-        <div class="logo">鬆弛熊圖鑑</div>
+        <div class="logo"> 鬆弛熊</div>
         <div style="font-size: 20px;">🐻</div>
     </div>
 
     <div class="sidebar" id="sb">
-        <h2>分類目錄</h2>
+        <h2 style="color:var(--purple);">分類目錄</h2>
         <div id="menuContent"></div>
-        <div style="margin-top:20px; padding:15px; background:#f9f9f9; border-radius:10px;">
-            <p style="font-size:12px; color:#999; margin-bottom:5px;">新增分類 (大類/小類)</p>
-            <input type="text" id="newMain" placeholder="大類 (例: 鬆弛熊)" style="width:100%; padding:8px; margin-bottom:5px;">
-            <input type="text" id="newSub" placeholder="小類 (例: 黑白系列)" style="width:100%; padding:8px;">
-            <button onclick="addCate()" style="width:100%; margin-top:10px; padding:8px; background:var(--purple); color:#fff; border:none; border-radius:5px;">新增分類</button>
+        
+        <div style="margin-top:20px; padding:15px; background:#f9f9f9; border-radius:15px;">
+            <p style="font-size:12px; color:#999; margin-bottom:8px;">新增分類 (大類/小類)</p>
+            <input type="text" id="newMain" placeholder="大類 (例: 鬆弛熊)" style="width:100%; padding:10px; margin-bottom:5px; border:1px solid #ddd; border-radius:8px;">
+            <input type="text" id="newSub" placeholder="小類 (例: 黑白系列)" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+            <button onclick="addCate()" style="width:100%; margin-top:10px; padding:12px; background:var(--purple); color:#fff; border:none; border-radius:8px; font-weight:bold;">新增分類</button>
         </div>
         <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:15px; border:none; background:#eee; border-radius:10px;">關閉</button>
     </div>
@@ -83,13 +88,19 @@
     <div class="overlay" id="ov" onclick="closeAll()"></div>
 
     <div class="hero">
-        <div class="search-area">
+        <div class="search-container">
             <input type="text" id="sName" placeholder="🔍 搜尋收藏名稱..." oninput="doSearch()">
-            <div class="date-filter">
-                自 <input type="month" id="sStart" onchange="doSearch()" style="width:40%"> 
-                至 <input type="month" id="sEnd" onchange="doSearch()" style="width:40%">
-            </div>
+            <div class="date-toggle" onclick="toggleDatePanel()">📅</div>
         </div>
+        
+        <div class="date-panel" id="datePanel">
+            <div class="date-inputs">
+                自 <input type="month" id="sStart" onchange="doSearch()" style="padding:5px; border:1px solid #eee; border-radius:5px;"> 
+                至 <input type="month" id="sEnd" onchange="doSearch()" style="padding:5px; border:1px solid #eee; border-radius:5px;">
+            </div>
+            <button onclick="clearDate()" style="margin-top:10px; font-size:11px; color:var(--purple); border:none; background:none;">重設日期</button>
+        </div>
+
         <div class="carousel" id="cp"></div>
     </div>
 
@@ -97,7 +108,7 @@
     <div class="grid" id="grid"></div>
 
     <div class="profile">
-        <div style="font-size:28px; font-weight:bold; margin-bottom:20px;">Rilakkuma™</div>
+        <div style="font-size:32px; font-weight:bold; margin-bottom:20px;">Rilakkuma™</div>
         <div class="profile-desc">リラックマはいつもごゆるり
 マイペースな着ぐるみのクマ。
 やんちゃなコリラックマと
@@ -111,11 +122,11 @@
     <button class="fab" onclick="openAdd()">+</button>
 
     <div class="modal" id="addM">
-        <h2 id="modalTitle">➕ 加入新收藏</h2>
+        <h2 id="modalTitle" style="color:var(--purple);">➕ 加入新收藏</h2>
         <input type="hidden" id="editId">
         
         <label>名稱</label>
-        <input type="text" id="n">
+        <input type="text" id="n" placeholder="輸入名稱">
         
         <label>日期</label>
         <input type="date" id="dt">
@@ -124,23 +135,25 @@
         <select id="selCate"></select>
         
         <label>詳情描述</label>
-        <textarea id="desc" rows="3"></textarea>
+        <textarea id="desc" rows="4" placeholder="產品詳細規格、故事..."></textarea>
         
-        <label>多圖片上傳 (可選多張)</label>
+        <label>多圖片上傳</label>
         <input type="file" id="imgs" accept="image/*" multiple onchange="previewImgs()">
         <div id="preView" class="img-preview-group"></div>
         
-        <label>影片連結 (YouTube / 網址)</label>
-        <input type="text" id="vid" placeholder="貼上網址...">
+        <label>影片連結 (YouTube)</label>
+        <input type="text" id="vid" placeholder="貼上 YouTube 連結">
         
-        <button id="saveBtn" onclick="save()" class="btn-main">儲存收藏</button>
-        <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; padding:10px;">取消</button>
+        <button id="saveBtn" onclick="saveItem()" class="btn-main">儲存收藏</button>
+        <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; padding:15px;">取消</button>
     </div>
 
     <div class="modal" id="dtM">
         <div id="dtC"></div>
-        <button id="editBtn" class="btn-main btn-edit">📝 編輯資料</button>
-        <button onclick="closeAll()" style="width:100%; padding:12px; background:#f0f0f0; border:none; border-radius:10px; margin-top:10px;">返回列表</button>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button id="editBtn" class="btn-main" style="background:#4caf50; flex:1;">📝 編輯資料</button>
+            <button onclick="closeAll()" class="btn-main" style="background:#eee; color:#333; flex:1;">返回</button>
+        </div>
     </div>
 
     <script>
@@ -159,16 +172,55 @@
             document.getElementById('ov').classList.toggle('active', s);
         }
 
+        function toggleDatePanel() {
+            document.getElementById('datePanel').classList.toggle('active');
+        }
+
+        function clearDate() {
+            document.getElementById('sStart').value = "";
+            document.getElementById('sEnd').value = "";
+            doSearch();
+        }
+
         function renderMenu() {
             let html = `<div class="menu-group"><div class="main-cate" onclick="filter('all')">顯示全部</div></div>`;
             for(let main in cates) {
-                html += `<div class="menu-group"><div class="main-cate">${main} <span style="font-size:10px; color:red;" onclick="delMain('${main}')">刪除</span></div>`;
-                cates[main].forEach(sub => {
-                    html += `<div class="sub-cate" onclick="filter('${main}-${sub}')">${sub}</div>`;
+                html += `
+                <div class="menu-group">
+                    <div class="main-cate">
+                        <span>${main}</span>
+                        <span class="del-btn" onclick="delMain('${main}')">×</span>
+                    </div>`;
+                cates[main].forEach((sub, idx) => {
+                    html += `
+                    <div class="sub-cate" onclick="filter('${main}-${sub}')">
+                        <span>${sub}</span>
+                        <span class="del-btn" onclick="delSub('${main}', ${idx})">×</span>
+                    </div>`;
                 });
                 html += `</div>`;
             }
             document.getElementById('menuContent').innerHTML = html;
+        }
+
+        function delMain(m) {
+            if(confirm(`確定刪除整組「${m}」分類嗎？`)) {
+                delete cates[m];
+                saveCates();
+            }
+        }
+
+        function delSub(m, idx) {
+            event.stopPropagation(); // 防止觸發篩選
+            if(confirm("確定刪除此子分類？")) {
+                cates[m].splice(idx, 1);
+                saveCates();
+            }
+        }
+
+        function saveCates() {
+            localStorage.setItem('cate_v7', JSON.stringify(cates));
+            init();
         }
 
         function updateCateSelect() {
@@ -184,14 +236,15 @@
         function addCate() {
             let m = document.getElementById('newMain').value.trim();
             let s = document.getElementById('newSub').value.trim();
-            if(!m || !s) return alert("請輸入大類及小類名稱");
+            if(!m || !s) return alert("請輸入大類及小類");
             if(!cates[m]) cates[m] = [];
             if(!cates[m].includes(s)) cates[m].push(s);
-            localStorage.setItem('cate_v7', JSON.stringify(cates));
-            init();
+            document.getElementById('newMain').value = "";
+            document.getElementById('newSub').value = "";
+            saveCates();
         }
 
-        async function save() {
+        async function saveItem() {
             const id = document.getElementById('editId').value;
             const n = document.getElementById('n').value;
             const d = document.getElementById('dt').value;
@@ -200,13 +253,11 @@
             const v = document.getElementById('vid').value;
             const files = document.getElementById('imgs').files;
 
-            if(!n) return alert("請輸入名稱");
+            if(!n) return alert("請輸入收藏名稱");
 
             let imgData = [];
             if(files.length > 0) {
-                for(let f of files) {
-                    imgData.push(await toBase64(f));
-                }
+                for(let f of files) { imgData.push(await toBase64(f)); }
             } else if(id) {
                 imgData = items.find(x => x.id == id).imgs;
             }
@@ -221,10 +272,11 @@
             }
 
             localStorage.setItem('bear_v7', JSON.stringify(items));
+            alert("儲存成功！");
             location.reload();
         }
 
-        const toBase64 = f => new Promise((res, rej) => {
+        const toBase64 = f => new Promise((res) => {
             const r = new FileReader();
             r.readAsDataURL(f);
             r.onload = () => res(r.result);
@@ -233,19 +285,21 @@
         function render(list = items) {
             document.getElementById('grid').innerHTML = list.map(item => `
                 <div class="card" onclick="openDetail(${item.id})">
-                    <img src="${item.imgs[0] || ''}">
+                    <img src="${item.imgs[0] || 'https://via.placeholder.com/200?text=No+Image'}">
                     <div class="card-info">
                         <b>${item.name}</b><br>
-                        <span style="color:#999; font-size:11px;">${item.date || ''}</span>
+                        <span style="color:#999; font-size:11px;">${item.date || '無日期'}</span>
                     </div>
                 </div>
             `).join('');
 
-            // Hero Carousel
+            // Carousel Update
             const top = items.slice(0, 5);
-            document.getElementById('cp').innerHTML = top.map((x, i) => `<img src="${x.imgs[0]}" class="carousel-img ${i==0?'active':''}">`).join('');
+            if(top.length > 0) {
+                document.getElementById('cp').innerHTML = top.map((x, i) => `<img src="${x.imgs[0]}" class="carousel-img ${i==0?'active':''}">`).join('');
+            }
             
-            // Yellow Scrolling
+            // Scrolling Profile Track
             document.getElementById('st').innerHTML = [...items, ...items].map(x => `<img src="${x.imgs[0]}">`).join('');
         }
 
@@ -277,14 +331,17 @@
         function openDetail(id) {
             const x = items.find(b => b.id == id);
             let mediaHtml = x.imgs.map(img => `<img src="${img}" style="width:100%; border-radius:10px; margin-bottom:10px;">`).join('');
-            if(x.vid) mediaHtml += `<iframe width="100%" height="200" src="${x.vid.replace('watch?v=', 'embed/')}" frameborder="0" allowfullscreen style="border-radius:10px;"></iframe>`;
+            if(x.vid) {
+                let vidId = x.vid.includes('v=') ? x.vid.split('v=')[1].split('&')[0] : x.vid.split('/').pop();
+                mediaHtml += `<iframe width="100%" height="200" src="https://www.youtube.com/embed/${vidId}" frameborder="0" allowfullscreen style="border-radius:10px;"></iframe>`;
+            }
 
             document.getElementById('dtC').innerHTML = `
-                ${mediaHtml}
-                <h2 style="color:var(--purple); margin-bottom:5px;">${x.name}</h2>
-                <p style="font-size:12px; color:#999;">${x.date} | ${x.cate}</p>
-                <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin:15px 0; white-space:pre-wrap;">${x.desc || '無描述內容'}</div>
-                <button onclick="delItem(${x.id})" style="color:red; background:none; border:none; width:100%;">🗑️ 刪除此項</button>
+                <div style="max-height:400px; overflow-y:auto; margin-bottom:15px; border-radius:10px;">${mediaHtml}</div>
+                <h2 style="color:var(--purple); margin:0;">${x.name}</h2>
+                <p style="font-size:12px; color:#999; margin:5px 0 15px;">📅 ${x.date || '未知'} | 📂 ${x.cate}</p>
+                <div style="background:#f9f9f9; padding:15px; border-radius:10px; line-height:1.6; white-space:pre-wrap;">${x.desc || '暫無描述'}</div>
+                <button onclick="delItem(${x.id})" style="color:var(--red); background:none; border:none; width:100%; margin-top:20px; font-weight:bold;">🗑️ 永久刪除此項</button>
             `;
             document.getElementById('editBtn').onclick = () => openEdit(x);
             document.getElementById('dtM').classList.add('active');
@@ -293,7 +350,7 @@
 
         function openEdit(x) {
             document.getElementById('dtM').classList.remove('active');
-            document.getElementById('modalTitle').innerText = "📝 編輯資料";
+            document.getElementById('modalTitle').innerText = "📝 編輯收藏資料";
             document.getElementById('editId').value = x.id;
             document.getElementById('n').value = x.name;
             document.getElementById('dt').value = x.date;
@@ -304,7 +361,7 @@
         }
 
         function delItem(id) {
-            if(confirm("確定刪除？")) {
+            if(confirm("確定永久刪除這筆收藏嗎？")) {
                 items = items.filter(x => x.id != id);
                 localStorage.setItem('bear_v7', JSON.stringify(items));
                 location.reload();
@@ -314,6 +371,9 @@
         function openAdd() {
             document.getElementById('editId').value = "";
             document.getElementById('modalTitle').innerText = "➕ 加入新收藏";
+            document.getElementById('n').value = "";
+            document.getElementById('desc').value = "";
+            document.getElementById('preView').innerHTML = "";
             document.getElementById('addM').classList.add('active');
             document.getElementById('ov').classList.add('active');
         }
