@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鬆弛熊圖𨯿</title>
+    <title>熊館秘藏 v8.4</title>
     <style>
         :root { --h-blue: #4fd1ed; --bg-cream: #fefddd; --purple: #554477; --brown: #5c4a3d; --border: #e8e8e8; }
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 0; overflow-x: hidden; }
@@ -16,98 +16,88 @@
         .sidebar { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: white; z-index: 3000; transition: 0.3s; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); overflow-y: auto; box-sizing: border-box; }
         .sidebar.active { left: 0; }
         .cate-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
-        .cate-name { font-weight: bold; color: var(--purple); cursor: pointer; }
+        .cate-name { font-weight: bold; color: var(--purple); }
         .del-x { color: #ccc; font-size: 18px; padding: 5px 10px; cursor: pointer; }
         .sub-cate-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 8px 20px; border-left: 2px solid var(--h-blue); margin: 5px 0; }
         .sub-cate-name { font-size: 14px; color: #666; flex: 1; cursor: pointer; }
 
-        /* Hero & Search (Fixing overflow) */
+        /* Hero & Search - 修復溢出 */
         .hero { background: var(--h-blue); padding: 75px 15px 25px; }
         .search-container { background: white; border-radius: 25px; display: flex; align-items: center; padding: 5px 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; }
-        .search-container input { border: none; flex: 1; padding: 10px; outline: none; font-size: 14px; width: 100%; box-sizing: border-box; }
-        .date-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; }
+        .search-container input { border: none; flex: 1; padding: 10px; outline: none; font-size: 14px; min-width: 0; }
         
-        /* Date Popover Fix */
         .date-popover { position: absolute; top: 55px; right: 0; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: none; z-index: 100; width: 220px; box-sizing: border-box; }
         .date-popover.active { display: block; }
-        .date-popover input { border: 1px solid #eee; margin: 5px 0; width: 100% !important; border-radius: 8px; }
+        .date-popover input { width: 100%; margin: 5px 0; border: 1px solid #eee; border-radius: 8px; padding: 8px; box-sizing: border-box; font-size: 14px; }
 
-        /* UI Elements */
+        /* Carousel */
         .carousel { width: 100%; aspect-ratio: 16/10; background: #fff; border-radius: 12px; overflow: hidden; position: relative; margin-top: 15px; }
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.5s; cursor: pointer; }
         .carousel-img.active { opacity: 1; z-index: 10; }
         
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; min-height: 200px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
         .card { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; }
         .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         
         /* Intro Section */
         .intro-section { background-color: var(--bg-cream); padding: 40px 20px 60px; text-align: center; margin-top: 10px; overflow: hidden; }
-        .intro-title { color: var(--brown); font-size: 24px; font-weight: bold; margin-bottom: 5px; }
-        .intro-text { color: var(--brown); line-height: 1.8; font-size: 14px; margin-bottom: 30px; }
-        
-        .scrolling-wrapper { width: 100%; }
         .scrolling-track { display: flex; gap: 15px; animation: scroll 25s linear infinite; width: max-content; }
-        .scrolling-track img { width: 130px; height: 130px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
+        .scrolling-track img { width: 130px; height: 130px; border-radius: 12px; object-fit: cover; cursor: pointer; }
         @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         
-        /* Modals & Inputs */
         .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--purple); color: white; border-radius: 50%; border: none; font-size: 30px; z-index: 1500; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; display:none; }
         .overlay.active { display:block; }
         
+        /* Modal & Form - 修復日期欄溢出 */
         .modal { position: fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; width:90%; max-height:85%; border-radius:20px; z-index:4000; display:none; padding:20px; overflow-y:auto; box-sizing: border-box; }
         .modal.active { display:block; }
-        
-        /* Input Box Sizing Fix */
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; display: block; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; font-size: 14px; display: block; }
         .btn-main { width: 100%; padding: 15px; background: var(--purple); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
-        /* 詳情頁圖片區域 (動態白邊，無邊框) */
-        .h-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0; background: #fff; border-radius: 10px; overflow: hidden; }
-        .h-scroll img { flex: 0 0 100%; width: 100%; height: 350px; object-fit: contain; scroll-snap-align: center; cursor: pointer; background: #fff; }
+        /* 詳情頁圖片顯示器 - 動態白邊且無邊框 */
+        .h-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0; background: #fff; border-radius: 12px; overflow: hidden; }
+        .h-scroll img { flex: 0 0 100%; width: 100%; max-height: 60vh; min-height: 300px; object-fit: contain; scroll-snap-align: center; cursor: pointer; background-color: #fff; }
         .h-scroll::-webkit-scrollbar { display: none; }
 
         .img-viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: none; justify-content: center; align-items: center; }
         .img-viewer.active { display: flex; }
-        .img-viewer img { max-width: 100%; max-height: 85vh; object-fit: contain; }
-        .close-viewer { position: absolute; top: 30px; right: 20px; color: white; font-size: 40px; cursor: pointer; padding: 10px; }
+        .img-viewer img { max-width: 100%; max-height: 90vh; object-fit: contain; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div onclick="toggleSidebar(true)" style="font-size:24px; cursor:pointer;">☰</div>
-        <div class="logo">鬆弛熊圖𨯿</div>
-        <div>🐻</div>
+        <div class="logo">熊館秘藏 v8.4</div>
+        <div>👤</div>
     </div>
 
     <div class="sidebar" id="sb">
         <h2 style="color:var(--purple)">分類目錄</h2>
         <div id="menuContent"></div>
         <div style="margin-top:20px; padding:15px; background:#f9f9f9; border-radius:10px;">
-            <p style="font-size:12px; color:#999;">新增分類 (大類/小類)</p>
-            <input type="text" id="newMain" placeholder="例如: 鬆弛熊">
-            <input type="text" id="newSub" placeholder="例如: 文具">
+            <p style="font-size:12px; color:#999;">新增分類</p>
+            <input type="text" id="newMain" placeholder="大類">
+            <input type="text" id="newSub" placeholder="小類">
             <button onclick="addCate()" style="width:100%; padding:10px; background:var(--purple); color:white; border:none; border-radius:5px;">新增分類</button>
         </div>
-        <button onclick="closeAll()" style="margin-top:20px; width:100%; padding:12px; background:#eee; border:none; border-radius:10px; color:#333;">關閉</button>
+        <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:12px; background:#eee; border:none; border-radius:10px;">關閉</button>
     </div>
 
     <div class="overlay" id="ov" onclick="closeAll()"></div>
 
     <div id="imgViewer" class="img-viewer" onclick="closeViewer()">
-        <span class="close-viewer">×</span>
-        <img id="viewerImg">
+        <img id="viewerImg" src="">
     </div>
 
     <div class="hero">
         <div class="search-container">
             <span>🔍</span>
-            <input type="text" id="sName" placeholder="搜尋收藏名稱..." oninput="doSearch()">
-            <button class="date-btn" onclick="toggleDatePopover()">📅</button>
+            <input type="text" id="sName" placeholder="搜尋名稱..." oninput="doSearch()">
+            <button onclick="toggleDatePopover()" style="background:none; border:none; font-size:18px;">📅</button>
             <div class="date-popover" id="datePop">
-                <p style="font-size:12px; margin:0 0 5px 0;">日期區間搜尋</p>
+                <p style="font-size:12px; margin:0;">日期區間搜尋</p>
                 <input type="month" id="sStart" onchange="doSearch()">
                 <input type="month" id="sEnd" onchange="doSearch()">
                 <button onclick="toggleDatePopover()" style="width:100%; margin-top:10px; background:var(--h-blue); border:none; border-radius:5px; padding:8px; color:white;">完成</button>
@@ -116,22 +106,11 @@
         <div class="carousel" id="cp"></div>
     </div>
 
-    <h3 style="padding: 0 15px; color: var(--purple); margin-bottom: 0;">全部收藏</h3>
     <div id="grid" class="grid"></div>
 
     <div class="intro-section">
-        <div class="intro-title">Rilakkuma™</div>
-         <div class="intro-subtitle">2003年9月登場</div>
-        <div class="intro-text">
-            リラックマはいつもごゆるり<br>
-            マイペースな着ぐるみのクマ。<br>
-            やんちゃなコリラックマと<br>
-            働き者のキイロイトリと一緒に<br>
-            暮らし、はちみつの森に住む<br>
-            チャイロイコグマや<br>
-            そのお友達と仲良し。
-            每一件收藏都是一段回憶。
-        </div>
+        <div style="color:var(--brown); font-size:24px; font-weight:bold;">Rilakkuma™</div>
+        <div style="color:var(--brown); font-size:12px; margin-bottom:20px;">2003年9月登場</div>
         <div class="scrolling-wrapper">
             <div class="scrolling-track" id="st"></div>
         </div>
@@ -147,25 +126,22 @@
         <select id="selCate"></select>
         <textarea id="desc" placeholder="詳情描述" rows="3"></textarea>
         <input type="file" id="imgs" accept="image/*" multiple>
-        <input type="text" id="vid" placeholder="YouTube 網址/Shorts">
-        <button onclick="save()" id="saveBtn" class="btn-main" style="margin-top:15px;">儲存收藏</button>
-        <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; padding:15px; margin-top:5px;">取消</button>
+        <input type="text" id="vid" placeholder="YouTube 網址">
+        <button onclick="save()" id="saveBtn" class="btn-main" style="margin-top:10px;">儲存</button>
+        <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; margin-top:5px;">取消</button>
     </div>
 
     <div class="modal" id="dtM">
         <div id="dtC"></div>
-        <button id="editBtn" class="btn-main" style="background:#4caf50; margin-top:10px;">📝 編輯資料</button>
-        <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; margin-top:10px; padding:10px;">返回列表</button>
+        <button id="editBtn" class="btn-main" style="background:#4caf50; margin-top:10px;">📝 編輯</button>
+        <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; margin-top:10px;">返回</button>
     </div>
 
     <script>
-        // IndexedDB 初始化
         const DB_NAME = "BearMuseumDB";
         const STORE_NAME = "ItemsStore";
         const CATE_STORE = "CateStore";
-        let db;
-        let items = [];
-        let cates = { "一般類別": ["毛公仔", "文具", "生活雜貨"] };
+        let db, items = [], cates = { "鬆弛熊": ["毛公仔", "文具", "生活雜貨"] };
 
         const request = indexedDB.open(DB_NAME, 2);
         request.onupgradeneeded = e => {
@@ -186,18 +162,38 @@
                 req.onsuccess = () => res(req.result);
             });
             if (cateRes) cates = cateRes.data;
-            renderMenu(); updateCateSelect(); render(); startCarousel();
+            render(); renderMenu(); updateCateSelect(); startCarousel();
         }
 
         function render(list = items) {
-            document.getElementById('grid').innerHTML = list.length === 0 ? `<div style="grid-column: span 2; text-align:center; color:#999; padding: 40px 0;">尚未加入任何收藏。</div>` : 
-            list.map(x => `<div class="card" onclick="openDetail(${x.id})"><img src="${x.imgs[0] || ''}"><div style="padding:10px; font-size:13px; color:var(--purple); font-weight:bold;">${x.name}</div></div>`).join('');
-            
+            document.getElementById('grid').innerHTML = list.map(x => `
+                <div class="card" onclick="openDetail(${x.id})">
+                    <img src="${x.imgs[0] || ''}">
+                    <div style="padding:10px; font-size:13px; font-weight:bold;">${x.name}</div>
+                </div>
+            `).join('');
             if(items.length > 0) {
-                const top5 = items.slice(0, 5);
-                document.getElementById('cp').innerHTML = top5.map((x, i) => `<img src="${x.imgs[0]}" class="carousel-img ${i==0?'active':''}" onclick="openDetail(${x.id})">`).join('');
+                document.getElementById('cp').innerHTML = items.slice(0, 5).map((x, i) => `<img src="${x.imgs[0]}" class="carousel-img ${i==0?'active':''}" onclick="openDetail(${x.id})">`).join('');
                 document.getElementById('st').innerHTML = [...items, ...items].map(x => `<img src="${x.imgs[0]}" onclick="openDetail(${x.id})">`).join('');
             }
+        }
+
+        function openDetail(id) {
+            const x = items.find(i => i.id == id);
+            let media = `<div class="h-scroll">` + x.imgs.map(img => `<img src="${img}" onclick="openViewer('${img}')">`).join('') + `</div>`;
+            const vidId = x.vid ? (x.vid.includes('v=') ? x.vid.split('v=')[1].split('&')[0] : (x.vid.includes('youtu.be/') ? x.vid.split('youtu.be/')[1] : null)) : null;
+            if(vidId) media += `<iframe width="100%" height="200" src="https://www.youtube.com/embed/${vidId}" frameborder="0" style="margin-top:10px; border-radius:10px;"></iframe>`;
+            
+            document.getElementById('dtC').innerHTML = `
+                ${media}
+                <h3 style="color:var(--purple); margin: 15px 0 5px 0;">${x.name}</h3>
+                <p style="font-size:12px; color:#999; margin-bottom:15px;">${x.date || '無日期'} | ${x.cate}</p>
+                <div style="background:#f9f9f9; padding:15px; border-radius:10px; white-space:pre-wrap; font-size:14px;">${x.desc || '無描述'}</div>
+                <button onclick="delItem(${x.id})" style="color:red; background:none; border:none; width:100%; margin-top:20px;">🗑️ 刪除收藏</button>
+            `;
+            document.getElementById('editBtn').onclick = () => openEdit(x);
+            document.getElementById('dtM').classList.add('active');
+            document.getElementById('ov').classList.add('active');
         }
 
         async function save() {
@@ -205,12 +201,30 @@
             btn.innerText = "儲存中..."; btn.disabled = true;
             const id = document.getElementById('editId').value;
             const files = document.getElementById('imgs').files;
-            let imgArray = [];
+            let imgArray = id ? items.find(x => x.id == id).imgs : [];
+            
             if(files.length > 0) {
-                for(let f of files) imgArray.push(await compressImage(f));
-            } else if(id) {
-                imgArray = items.find(x => x.id == id).imgs;
+                imgArray = [];
+                for(let f of files) {
+                    imgArray.push(await new Promise(res => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(f);
+                        reader.onload = e => {
+                            const img = new Image();
+                            img.src = e.target.result;
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                let w = img.width, h = img.height;
+                                if(w > 1080 || h > 1080) { if(w > h){ h *= 1080/w; w = 1080; } else { w *= 1080/h; h = 1080; } }
+                                canvas.width = w; canvas.height = h;
+                                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                                res(canvas.toDataURL('image/jpeg', 0.8));
+                            };
+                        };
+                    }));
+                }
             }
+
             const data = {
                 id: id ? parseInt(id) : Date.now(),
                 name: document.getElementById('n').value,
@@ -225,66 +239,7 @@
             tx.oncomplete = () => location.reload();
         }
 
-        function openDetail(id) {
-            const x = items.find(i => i.id == id);
-            let media = `<div class="h-scroll">` + x.imgs.map(img => `<img src="${img}" onclick="openViewer('${img}')">`).join('') + `</div>`;
-            const yt = getYouTubeEmbedUrl(x.vid);
-            if(yt) media += `<iframe width="100%" height="200" src="${yt}" frameborder="0" allowfullscreen style="border-radius:10px; margin-top:10px; width:100%;"></iframe>`;
-            
-            document.getElementById('dtC').innerHTML = `
-                ${media}
-                <h3 style="color:var(--purple); margin: 15px 0 5px 0;">${x.name}</h3>
-                <p style="font-size:12px; color:#999; margin: 0 0 15px 0;">日期：${x.date || '無'} | 分類：${x.cate}</p>
-                <div style="background:#f9f9f9; padding:15px; border-radius:10px; white-space:pre-wrap; font-size:14px; color:#444; line-height:1.6;">${x.desc || '無描述'}</div>
-                <button onclick="delItem(${x.id})" style="color:red; background:none; border:none; width:100%; margin-top:20px; padding:10px;">🗑️ 永久刪除此項</button>
-            `;
-            document.getElementById('editBtn').onclick = () => openEdit(x);
-            document.getElementById('dtM').classList.add('active');
-            document.getElementById('ov').classList.add('active');
-        }
-
-        // Helper Functions (Compress, Search, etc.)
-        function compressImage(file) {
-            return new Promise(res => {
-                const reader = new FileReader(); reader.readAsDataURL(file);
-                reader.onload = e => {
-                    const img = new Image(); img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let w = img.width, h = img.height, max = 1080;
-                        if(w > h) { if(w > max){ h *= max/w; w = max; } } else { if(h > max){ w *= max/h; h = max; } }
-                        canvas.width = w; canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        res(canvas.toDataURL('image/jpeg', 0.8));
-                    };
-                };
-            });
-        }
-
-        function getYouTubeEmbedUrl(url) {
-            if (!url) return null;
-            let vid = "";
-            if (url.includes("youtu.be/")) vid = url.split("youtu.be/")[1].split("?")[0];
-            else if (url.includes("v=")) vid = url.split("v=")[1].split("&")[0];
-            else if (url.includes("shorts/")) vid = url.split("shorts/")[1].split("?")[0];
-            return vid ? `https://www.youtube.com/embed/${vid}` : null;
-        }
-
-        function doSearch() {
-            const key = document.getElementById('sName').value.toLowerCase();
-            const start = document.getElementById('sStart').value;
-            const end = document.getElementById('sEnd').value;
-            const filtered = items.filter(x => {
-                const matchN = x.name.toLowerCase().includes(key);
-                const xD = x.date ? x.date.substring(0, 7) : "";
-                let matchD = true;
-                if(start) matchD = matchD && (xD >= start);
-                if(end) matchD = matchD && (xD <= end);
-                return matchN && matchD;
-            });
-            render(filtered);
-        }
-
+        // 基本功能控制
         function startCarousel() {
             let idx = 0;
             setInterval(() => {
@@ -296,66 +251,39 @@
                 }
             }, 5000);
         }
-
-        function renderMenu() {
-            let html = `<div class="cate-row" onclick="filterCate('all')" style="cursor:pointer;"><span class="cate-name">顯示全部</span></div>`;
-            for(let m in cates) {
-                html += `<div class="cate-row"><span class="cate-name">${m}</span><span class="del-x" onclick="delMain('${m}')">✕</span></div>`;
-                cates[m].forEach(s => html += `<div class="sub-cate-row"><span class="sub-cate-name" onclick="filterCate('${m}-${s}')">${s}</span><span class="del-x" style="font-size:14px;" onclick="delSub('${m}', '${s}')">✕</span></div>`);
-            }
-            document.getElementById('menuContent').innerHTML = html;
+        function doSearch() {
+            const key = document.getElementById('sName').value.toLowerCase();
+            const s = document.getElementById('sStart').value, e = document.getElementById('sEnd').value;
+            render(items.filter(x => {
+                const matchN = x.name.toLowerCase().includes(key);
+                const xD = x.date ? x.date.substring(0, 7) : "";
+                return matchN && (!s || xD >= s) && (!e || xD <= e);
+            }));
         }
-
-        function updateCateSelect() {
-            let html = "";
-            for(let m in cates) cates[m].forEach(s => html += `<option value="${m}-${s}">${m} - ${s}</option>`);
-            document.getElementById('selCate').innerHTML = html;
-        }
-
-        async function saveCates() {
-            const tx = db.transaction(CATE_STORE, "readwrite");
-            tx.objectStore(CATE_STORE).put({ id: "main_cates", data: cates });
-        }
-
-        function addCate() {
-            let m = document.getElementById('newMain').value.trim(), s = document.getElementById('newSub').value.trim();
-            if(!m || !s) return alert("請填寫大類和小類");
-            if(!cates[m]) cates[m] = [];
-            if(!cates[m].includes(s)) cates[m].push(s);
-            saveCates().then(loadAll);
-            document.getElementById('newMain').value = ""; document.getElementById('newSub').value = "";
-        }
-
-        function delMain(m) { if(confirm("確定刪除大分類？")) { delete cates[m]; saveCates().then(loadAll); } }
-        function delSub(m, s) { if(confirm("確定刪除子分類？")) { cates[m] = cates[m].filter(x => x !== s); saveCates().then(loadAll); } }
-        function filterCate(c) { render(c === 'all' ? items : items.filter(x => x.cate === c)); closeAll(); }
-        function openViewer(src) { document.getElementById('viewerImg').src = src; document.getElementById('imgViewer').classList.add('active'); }
-        function closeViewer() { document.getElementById('imgViewer').classList.remove('active'); }
-        function closeAll() {
-            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-            document.getElementById('ov').classList.remove('active');
-            document.getElementById('datePop').classList.remove('active');
-            document.getElementById('sb').classList.remove('active');
-        }
-        function openAdd() { 
-            document.getElementById('editId').value = ""; document.getElementById('n').value = "";
-            document.getElementById('dt').value = ""; document.getElementById('desc').value = "";
-            document.getElementById('modalTitle').innerText = "➕ 加入收藏";
-            document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active'); 
-        }
-        function openEdit(x) { 
-            closeAll();
-            document.getElementById('editId').value = x.id; document.getElementById('n').value = x.name;
-            document.getElementById('dt').value = x.date; document.getElementById('selCate').value = x.cate;
-            document.getElementById('desc').value = x.desc; document.getElementById('vid').value = x.vid;
-            document.getElementById('modalTitle').innerText = "📝 編輯資料";
-            document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active');
-        }
-        function delItem(id) { if(confirm("確定刪除？")) { const tx = db.transaction(STORE_NAME, "readwrite"); tx.objectStore(STORE_NAME).delete(id); tx.oncomplete = () => location.reload(); } }
         function toggleSidebar(s) { document.getElementById('sb').classList.toggle('active', s); document.getElementById('ov').classList.toggle('active', s); }
         function toggleDatePopover() { document.getElementById('datePop').classList.toggle('active'); }
+        function openViewer(src) { document.getElementById('viewerImg').src = src; document.getElementById('imgViewer').classList.add('active'); }
+        function closeViewer() { document.getElementById('imgViewer').classList.remove('active'); }
+        function closeAll() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); document.getElementById('ov').classList.remove('active'); document.getElementById('datePop').classList.remove('active'); toggleSidebar(false); }
+        function openAdd() { closeAll(); document.getElementById('editId').value = ""; document.getElementById('modalTitle').innerText = "➕ 加入收藏"; document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active'); }
+        function openEdit(x) { closeAll(); document.getElementById('editId').value = x.id; document.getElementById('n').value = x.name; document.getElementById('dt').value = x.date; document.getElementById('selCate').value = x.cate; document.getElementById('desc').value = x.desc; document.getElementById('vid').value = x.vid; document.getElementById('modalTitle').innerText = "📝 編輯資料"; document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active'); }
+        function delItem(id) { if(confirm("確定刪除？")) { const tx = db.transaction(STORE_NAME, "readwrite"); tx.objectStore(STORE_NAME).delete(id); tx.oncomplete = () => location.reload(); } }
+        function renderMenu() {
+            let h = `<div class="cate-row" onclick="filterCate('all')">顯示全部</div>`;
+            for(let m in cates) {
+                h += `<div class="cate-row"><b>${m}</b><span onclick="delMain('${m}')">✕</span></div>`;
+                cates[m].forEach(s => h += `<div class="sub-cate-row" onclick="filterCate('${m}-${s}')">${s}</div>`);
+            }
+            document.getElementById('menuContent').innerHTML = h;
+        }
+        function updateCateSelect() {
+            let h = "";
+            for(let m in cates) cates[m].forEach(s => h += `<option value="${m}-${s}">${m}-${s}</option>`);
+            document.getElementById('selCate').innerHTML = h;
+        }
     </script>
 </body>
 </html>
+
 
 
