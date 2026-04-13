@@ -28,7 +28,6 @@
         .search-container input { border: none; flex: 1; padding: 10px; outline: none; font-size: 14px; }
         .date-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; }
         
-        /* 修正日期視窗寬度與內距，防止凸出 */
         .date-popover { position: absolute; top: 55px; right: 0; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: none; z-index: 100; width: 240px; box-sizing: border-box; }
         .date-popover.active { display: block; }
         .date-popover input { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
@@ -61,7 +60,7 @@
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; }
         .btn-main { width: 100%; padding: 15px; background: var(--purple); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
-        /* 詳情頁圖片顯示器 (動態比例) */
+        /* 詳情頁圖片顯示器 */
         .h-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0; background: #fff; border-radius: 12px; overflow-y: hidden; }
         .h-scroll img { flex: 0 0 100%; width: 100%; max-height: 450px; object-fit: contain; scroll-snap-align: center; cursor: pointer; display: block; }
         .h-scroll::-webkit-scrollbar { display: none; }
@@ -172,7 +171,19 @@
             const tx = db.transaction([STORE_NAME, CATE_STORE], "readonly");
             items = await new Promise(res => {
                 const req = tx.objectStore(STORE_NAME).getAll();
-                req.onsuccess = () => res(req.result.sort((a,b) => b.id - a.id));
+                req.onsuccess = () => {
+                    let resultItems = req.result;
+                    // 【重點修改】根據所選日期排序 (由新到舊)
+                    resultItems.sort((a, b) => {
+                        const dateA = a.date || "0000-00-00";
+                        const dateB = b.date || "0000-00-00";
+                        if (dateA !== dateB) {
+                            return dateB.localeCompare(dateA); // 日期降冪排列
+                        }
+                        return b.id - a.id; // 如果日期相同，或兩者都沒填日期，則按加入順序排
+                    });
+                    res(resultItems);
+                };
             });
             const cateRes = await new Promise(res => {
                 const req = tx.objectStore(CATE_STORE).get("main_cates");
@@ -182,7 +193,6 @@
             renderMenu(); updateCateSelect(); render(); startCarousel();
         }
 
-        // 分類管理與過濾 (已補回)
         function filterCate(c) {
             if(c === 'all') render(items);
             else render(items.filter(x => x.cate === c));
@@ -194,7 +204,6 @@
             for(let main in cates) {
                 html += `<div class="cate-row"><span class="cate-name">${main}</span><span class="del-x" onclick="delMain('${main}')">✕</span></div>`;
                 cates[main].forEach(sub => {
-                    // 補回子分類的 ✕ 刪除按鈕
                     html += `<div class="sub-cate-row"><span class="sub-cate-name" onclick="filterCate('${main}-${sub}')">${sub}</span><span class="del-x" style="font-size:14px; padding:0 5px;" onclick="delSub('${main}', '${sub}')">✕</span></div>`;
                 });
             }
@@ -311,7 +320,7 @@
             document.getElementById('dtC').innerHTML = `
                 ${media}
                 <h3 style="color:var(--purple); margin: 15px 0 5px 0;">${x.name}</h3>
-                <p style="font-size:12px; color:#999; margin- 0 0 15px 0;">${x.date || ''} | ${x.cate}</p>
+                <p style="font-size:12px; color:#999; margin: 0 0 15px 0;">${x.date || '無日期'} | ${x.cate}</p>
                 <div style="background:#f9f9f9; padding:15px; border-radius:12px; font-size:14px; color:#444; line-height:1.6; white-space:pre-wrap;">${x.desc || '無描述'}</div>
                 <button onclick="delItem(${x.id})" style="color:#ff4444; background:none; border:none; width:100%; margin-top:20px; padding:10px;">🗑️ 永久刪除記錄</button>
             `;
@@ -351,6 +360,7 @@
     </script>
 </body>
 </html>
+
 
 
 
