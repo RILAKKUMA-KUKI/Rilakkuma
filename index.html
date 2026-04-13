@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鬆弛熊圖𨯿 </title>
+    <title>鬆弛熊圖𨯿</title>
     <style>
         :root { --h-blue: #4fd1ed; --bg-cream: #fefddd; --purple: #554477; --brown: #5c4a3d; --border: #e8e8e8; }
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 0; overflow-x: hidden; }
@@ -15,19 +15,24 @@
         /* Sidebar & Categories */
         .sidebar { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: white; z-index: 3000; transition: 0.3s; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); overflow-y: auto; box-sizing: border-box; }
         .sidebar.active { left: 0; }
-        .cate-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
-        .cate-name { font-weight: bold; color: var(--purple); }
-        .del-x { color: #ccc; font-size: 18px; padding: 5px 10px; cursor: pointer; }
         
-        .sub-cate-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px 8px 20px; border-left: 2px solid var(--h-blue); margin: 5px 0; }
-        .sub-cate-name { font-size: 14px; color: #666; flex: 1; cursor: pointer; }
+        .cate-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .cate-name { font-weight: bold; color: var(--purple); flex: 1; cursor: pointer; }
+        .cate-name.sub { font-weight: normal; color: #555; }
+        .cate-name.subsub { font-weight: normal; color: #888; font-size: 13px; }
+        .del-x { color: #ccc; font-size: 16px; padding: 5px 10px; cursor: pointer; }
+        
+        /* 摺疊選單樣式 */
+        .toggle-btn { display: inline-block; width: 24px; text-align: center; color: #aaa; font-size: 12px; transition: 0.2s; cursor: pointer; }
+        .toggle-btn.open { transform: rotate(90deg); color: var(--purple); }
+        .cate-group { display: none; padding-left: 20px; border-left: 2px solid var(--h-blue); margin-left: 12px; }
+        .cate-group.open { display: block; }
 
         /* Search Bar & Popover */
         .hero { background: var(--h-blue); padding: 75px 15px 25px; }
         .search-container { background: white; border-radius: 25px; display: flex; align-items: center; padding: 5px 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; }
         .search-container input { border: none; flex: 1; padding: 10px; outline: none; font-size: 14px; }
         .date-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; }
-        
         .date-popover { position: absolute; top: 55px; right: 0; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: none; z-index: 100; width: 240px; box-sizing: border-box; }
         .date-popover.active { display: block; }
         .date-popover input { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
@@ -45,7 +50,6 @@
         /* Intro Section */
         .intro-section { background-color: var(--bg-cream); padding: 40px 20px 60px; text-align: center; margin-top: 10px; overflow: hidden; }
         .intro-title { color: var(--brown); font-size: 24px; font-weight: bold; margin-bottom: 5px; }
-        
         .scrolling-wrapper { width: 100%; }
         .scrolling-track { display: flex; gap: 15px; animation: scroll 25s linear infinite; width: max-content; }
         .scrolling-track img { width: 130px; height: 130px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
@@ -57,7 +61,7 @@
         
         .modal { position: fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; width:90%; max-height:85%; border-radius:20px; z-index:4000; display:none; padding:20px; overflow-y:auto; box-sizing: border-box; }
         .modal.active { display:block; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; background:#fafafa; }
         .btn-main { width: 100%; padding: 15px; background: var(--purple); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
         /* 詳情頁圖片顯示器 */
@@ -75,20 +79,21 @@
 
     <div class="header">
         <div onclick="toggleSidebar(true)" style="font-size:24px; cursor:pointer;">☰</div>
-        <div class="logo">鬆弛熊圖𨯿 </div>
+        <div class="logo">鬆弛熊圖𨯿</div>
         <div>🐻</div>
     </div>
 
     <div class="sidebar" id="sb">
-        <h2 style="color:var(--purple)">分類目錄</h2>
+        <h2 style="color:var(--purple); margin-top:0;">分類目錄</h2>
         <div id="menuContent"></div>
-        <div style="margin-top:20px; padding:15px; background:#f9f9f9; border-radius:10px;">
-            <p style="font-size:12px; color:#999;">新增分類</p>
-            <input type="text" id="newMain" placeholder="大分類">
-            <input type="text" id="newSub" placeholder="小分類">
-            <button onclick="addCate()" style="width:100%; padding:10px; background:var(--purple); color:white; border:none; border-radius:5px;">新增分類</button>
+        <div style="margin-top:25px; padding:15px; background:#f4f4f4; border-radius:10px;">
+            <p style="font-size:13px; color:#666; font-weight:bold; margin-top:0;">➕ 新增分類</p>
+            <input type="text" id="newMain" placeholder="大分類 (必填, 例: 鬆弛熊)">
+            <input type="text" id="newSub" placeholder="中分類 (選填, 例: 2026)">
+            <input type="text" id="newSubSub" placeholder="小分類 (選填, 例: 4月)">
+            <button onclick="addCate()" style="width:100%; padding:10px; background:var(--purple); color:white; border:none; border-radius:8px; margin-top:5px; cursor:pointer;">建立新分類</button>
         </div>
-        <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:12px; background:#eee; border:none; border-radius:10px; color:#333;">關閉</button>
+        <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:12px; background:#e0e0e0; border:none; border-radius:10px; color:#333; cursor:pointer;">關閉側邊欄</button>
     </div>
 
     <div class="overlay" id="ov" onclick="closeAll()"></div>
@@ -135,16 +140,23 @@
     <button class="fab" onclick="openAdd()">+</button>
 
     <div class="modal" id="addM">
-        <h2 id="modalTitle">➕ 加入收藏</h2>
+        <h2 id="modalTitle" style="margin-top:0;">➕ 加入收藏</h2>
         <input type="hidden" id="editId">
         <input type="text" id="n" placeholder="名稱">
         <input type="date" id="dt">
-        <select id="selCate"></select>
-        <textarea id="desc" placeholder="詳情描述" rows="3"></textarea>
+        
+        <div style="background:#f0f0f0; padding:10px; border-radius:8px; margin:8px 0;">
+            <p style="font-size:12px; color:#666; margin:0 0 5px 0;">資料分類</p>
+            <select id="selL1" onchange="popL2()"></select>
+            <select id="selL2" onchange="popL3()"></select>
+            <select id="selL3"></select>
+        </div>
+
+        <textarea id="desc" placeholder="詳情描述 (輸入網址會自動變成連結)" rows="3"></textarea>
         <input type="file" id="imgs" accept="image/*" multiple>
         <input type="text" id="vid" placeholder="YouTube 網址/Shorts">
         <button onclick="save()" id="saveBtn" class="btn-main" style="margin-top:15px;">儲存收藏</button>
-        <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; padding:15px; margin-top:5px;">取消</button>
+        <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; padding:15px; margin-top:5px; cursor:pointer;">取消</button>
     </div>
 
     <div class="modal" id="dtM">
@@ -157,7 +169,8 @@
         const DB_NAME = "BearMuseumDB";
         const STORE_NAME = "ItemsStore";
         const CATE_STORE = "CateStore";
-        let db, items = [], cates = { "一般類別": ["毛公仔", "文具"], "鬆弛熊": ["生活用品"] };
+        // 預設資料結構升級為物件格式 (三級樹狀)
+        let db, items = [], cates = { "一般類別": { "毛公仔": [], "文具": [] }, "鬆弛熊": { "生活用品": [] } };
 
         const request = indexedDB.open(DB_NAME, 2);
         request.onupgradeneeded = e => {
@@ -173,14 +186,11 @@
                 const req = tx.objectStore(STORE_NAME).getAll();
                 req.onsuccess = () => {
                     let resultItems = req.result;
-                    // 【重點修改】根據所選日期排序 (由新到舊)
                     resultItems.sort((a, b) => {
                         const dateA = a.date || "0000-00-00";
                         const dateB = b.date || "0000-00-00";
-                        if (dateA !== dateB) {
-                            return dateB.localeCompare(dateA); // 日期降冪排列
-                        }
-                        return b.id - a.id; // 如果日期相同，或兩者都沒填日期，則按加入順序排
+                        if (dateA !== dateB) return dateB.localeCompare(dateA);
+                        return b.id - a.id;
                     });
                     res(resultItems);
                 };
@@ -189,23 +199,75 @@
                 const req = tx.objectStore(CATE_STORE).get("main_cates");
                 req.onsuccess = () => res(req.result);
             });
-            if (cateRes) cates = cateRes.data;
-            renderMenu(); updateCateSelect(); render(); startCarousel();
+            
+            if (cateRes && cateRes.data) {
+                let loaded = cateRes.data;
+                // 向下兼容舊版 [大類: [小類]] 結構，轉換為 {大類: {小類: []}}
+                for (let m in loaded) {
+                    if (Array.isArray(loaded[m])) {
+                        let tempObj = {};
+                        loaded[m].forEach(s => tempObj[s] = []);
+                        loaded[m] = tempObj;
+                    }
+                }
+                cates = loaded;
+            }
+            renderMenu(); popL1(); render(); startCarousel();
+        }
+
+        /* ------------------ 目錄與摺疊邏輯 ------------------ */
+        function toggleFolder(el, targetId) {
+            el.classList.toggle('open');
+            document.getElementById(targetId).classList.toggle('open');
         }
 
         function filterCate(c) {
             if(c === 'all') render(items);
-            else render(items.filter(x => x.cate === c));
+            // 比對是否等於該分類，或者屬於該分類底下的子項目
+            else render(items.filter(x => x.cate === c || (x.cate && x.cate.startsWith(c + '-'))));
             toggleSidebar(false);
         }
 
         function renderMenu() {
-            let html = `<div class="cate-row" onclick="filterCate('all')" style="cursor:pointer;"><span class="cate-name">顯示全部</span></div>`;
-            for(let main in cates) {
-                html += `<div class="cate-row"><span class="cate-name">${main}</span><span class="del-x" onclick="delMain('${main}')">✕</span></div>`;
-                cates[main].forEach(sub => {
-                    html += `<div class="sub-cate-row"><span class="sub-cate-name" onclick="filterCate('${main}-${sub}')">${sub}</span><span class="del-x" style="font-size:14px; padding:0 5px;" onclick="delSub('${main}', '${sub}')">✕</span></div>`;
-                });
+            let html = `<div class="cate-row"><span class="cate-name" onclick="filterCate('all')">📚 顯示全部</span></div>`;
+            let mIdx = 0;
+            for(let m in cates) {
+                let mId = `f-m-${mIdx++}`;
+                let hasSub = Object.keys(cates[m]).length > 0;
+                html += `
+                <div class="cate-row">
+                    <span class="toggle-btn" style="visibility:${hasSub?'visible':'hidden'}" onclick="toggleFolder(this, '${mId}')">▶</span>
+                    <span class="cate-name" onclick="filterCate('${m}')">${m}</span>
+                    <span class="del-x" onclick="delCate(event, '${m}')">✕</span>
+                </div>`;
+                
+                if (hasSub) {
+                    html += `<div id="${mId}" class="cate-group">`;
+                    let sIdx = 0;
+                    for(let s in cates[m]) {
+                        let sId = `${mId}-s-${sIdx++}`;
+                        let hasSubSub = cates[m][s].length > 0;
+                        html += `
+                        <div class="cate-row" style="padding: 8px 0;">
+                            <span class="toggle-btn" style="visibility:${hasSubSub?'visible':'hidden'}" onclick="toggleFolder(this, '${sId}')">▶</span>
+                            <span class="cate-name sub" onclick="filterCate('${m}-${s}')">${s}</span>
+                            <span class="del-x" onclick="delCate(event, '${m}', '${s}')">✕</span>
+                        </div>`;
+                        
+                        if (hasSubSub) {
+                            html += `<div id="${sId}" class="cate-group">`;
+                            cates[m][s].forEach(ss => {
+                                html += `
+                                <div class="cate-row" style="padding: 6px 0;">
+                                    <span class="cate-name subsub" style="margin-left:24px;" onclick="filterCate('${m}-${s}-${ss}')">• ${ss}</span>
+                                    <span class="del-x" onclick="delCate(event, '${m}', '${s}', '${ss}')">✕</span>
+                                </div>`;
+                            });
+                            html += `</div>`;
+                        }
+                    }
+                    html += `</div>`;
+                }
             }
             document.getElementById('menuContent').innerHTML = html;
         }
@@ -215,30 +277,64 @@
             tx.objectStore(CATE_STORE).put({ id: "main_cates", data: cates });
         }
 
-        function delMain(m) {
-            if(confirm(`確定刪除大分類「${m}」？`)) { delete cates[m]; saveCates().then(loadAll); }
-        }
-
-        function delSub(m, s) {
-            if(confirm(`確定刪除子分類「${s}」？`)) { cates[m] = cates[m].filter(sub => sub !== s); saveCates().then(loadAll); }
+        function delCate(e, m, s=null, ss=null) {
+            e.stopPropagation();
+            let name = ss ? ss : (s ? s : m);
+            if(!confirm(`確定刪除分類「${name}」？(請注意：原屬於此分類的物品不會被刪除)`)) return;
+            
+            if (ss) cates[m][s] = cates[m][s].filter(x => x !== ss);
+            else if (s) delete cates[m][s];
+            else delete cates[m];
+            
+            saveCates().then(() => { loadAll(); });
         }
 
         function addCate() {
             let m = document.getElementById('newMain').value.trim();
             let s = document.getElementById('newSub').value.trim();
-            if(!m || !s) return alert("請填寫大類和小類");
-            if(!cates[m]) cates[m] = [];
-            if(!cates[m].includes(s)) cates[m].push(s);
-            saveCates().then(loadAll);
-            document.getElementById('newMain').value = ""; document.getElementById('newSub').value = "";
+            let ss = document.getElementById('newSubSub').value.trim();
+            
+            if(!m) return alert("請至少填寫「大分類」！");
+            if(!cates[m]) cates[m] = {};
+            if(s && !cates[m][s]) cates[m][s] = [];
+            if(s && ss && !cates[m][s].includes(ss)) cates[m][s].push(ss);
+            
+            saveCates().then(() => {
+                loadAll();
+                document.getElementById('newMain').value = ""; 
+                document.getElementById('newSub').value = ""; 
+                document.getElementById('newSubSub').value = "";
+                alert("建立成功！");
+            });
         }
 
-        function updateCateSelect() {
-            let html = "";
-            for(let main in cates) cates[main].forEach(sub => html += `<option value="${main}-${sub}">${main} - ${sub}</option>`);
-            document.getElementById('selCate').innerHTML = html;
+        /* ------------------ 聯動式資料輸入選單 ------------------ */
+        function popL1() {
+            let s = `<option value="">-- 主分類 (必選) --</option>`;
+            for(let m in cates) s += `<option value="${m}">${m}</option>`;
+            document.getElementById('selL1').innerHTML = s;
+            popL2();
+        }
+        function popL2() {
+            let m = document.getElementById('selL1').value;
+            let s = `<option value="">-- 中分類 (選填) --</option>`;
+            if(m && cates[m]) {
+                for(let sub in cates[m]) s += `<option value="${sub}">${sub}</option>`;
+            }
+            document.getElementById('selL2').innerHTML = s;
+            popL3();
+        }
+        function popL3() {
+            let m = document.getElementById('selL1').value;
+            let sub = document.getElementById('selL2').value;
+            let s = `<option value="">-- 小分類 (選填) --</option>`;
+            if(m && sub && cates[m] && cates[m][sub]) {
+                cates[m][sub].forEach(ss => s += `<option value="${ss}">${ss}</option>`);
+            }
+            document.getElementById('selL3').innerHTML = s;
         }
 
+        /* ------------------ 核心功能 ------------------ */
         async function save() {
             const btn = document.getElementById('saveBtn');
             btn.innerText = "儲存中..."; btn.disabled = true;
@@ -250,11 +346,19 @@
             } else if(id) {
                 imgArray = items.find(x => x.id == id).imgs;
             }
+            
+            // 組合分類字串
+            let l1 = document.getElementById('selL1').value;
+            let l2 = document.getElementById('selL2').value;
+            let l3 = document.getElementById('selL3').value;
+            let cateString = [l1, l2, l3].filter(Boolean).join('-');
+            if (!cateString) cateString = "未分類";
+
             const data = {
                 id: id ? parseInt(id) : Date.now(),
                 name: document.getElementById('n').value,
                 date: document.getElementById('dt').value,
-                cate: document.getElementById('selCate').value,
+                cate: cateString,
                 desc: document.getElementById('desc').value,
                 vid: document.getElementById('vid').value,
                 imgs: imgArray
@@ -305,6 +409,15 @@
             }, 5000);
         }
 
+        // 轉換描述中的 URL 為可點擊連結
+        function formatDesc(text) {
+            if(!text) return '無描述';
+            // 基本的防XSS，並將網址轉換為 <a> 標籤
+            let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return safeText.replace(urlRegex, '<a href="$1" target="_blank" style="color:var(--h-blue); text-decoration:underline; word-break: break-all;">$1</a>');
+        }
+
         function openDetail(id) {
             const x = items.find(i => i.id == id);
             let media = `<div class="h-scroll">` + x.imgs.map(img => `<img src="${img}" onclick="openViewer('${img}')">`).join('') + `</div>`;
@@ -321,8 +434,8 @@
                 ${media}
                 <h3 style="color:var(--purple); margin: 15px 0 5px 0;">${x.name}</h3>
                 <p style="font-size:12px; color:#999; margin: 0 0 15px 0;">${x.date || '無日期'} | ${x.cate}</p>
-                <div style="background:#f9f9f9; padding:15px; border-radius:12px; font-size:14px; color:#444; line-height:1.6; white-space:pre-wrap;">${x.desc || '無描述'}</div>
-                <button onclick="delItem(${x.id})" style="color:#ff4444; background:none; border:none; width:100%; margin-top:20px; padding:10px;">🗑️ 永久刪除記錄</button>
+                <div style="background:#f9f9f9; padding:15px; border-radius:12px; font-size:14px; color:#444; line-height:1.6; white-space:pre-wrap;">${formatDesc(x.desc)}</div>
+                <button onclick="delItem(${x.id})" style="color:#ff4444; background:none; border:none; width:100%; margin-top:20px; padding:10px;">🗑️ 刪除記錄</button>
             `;
             document.getElementById('editBtn').onclick = () => openEdit(x);
             document.getElementById('dtM').classList.add('active');
@@ -333,17 +446,29 @@
         function closeViewer() { document.getElementById('imgViewer').classList.remove('active'); }
         function closeAll() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); document.getElementById('ov').classList.remove('active'); toggleSidebar(false); }
         function toggleSidebar(s) { document.getElementById('sb').classList.toggle('active', s); document.getElementById('ov').classList.toggle('active', s); }
+        
         function openAdd() { 
             document.getElementById('editId').value = ""; document.getElementById('n').value = ""; document.getElementById('dt').value = ""; document.getElementById('desc').value = ""; document.getElementById('vid').value = "";
+            document.getElementById('selL1').value = ""; popL2();
             document.getElementById('modalTitle').innerText = "➕ 加入收藏";
             document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active'); 
         }
+        
         function openEdit(x) {
             closeAll();
-            document.getElementById('editId').value = x.id; document.getElementById('n').value = x.name; document.getElementById('dt').value = x.date; document.getElementById('selCate').value = x.cate; document.getElementById('desc').value = x.desc; document.getElementById('vid').value = x.vid;
+            document.getElementById('editId').value = x.id; document.getElementById('n').value = x.name; document.getElementById('dt').value = x.date; 
+            document.getElementById('desc').value = x.desc; document.getElementById('vid').value = x.vid;
+            
+            // 解析回填三級分類
+            let parts = (x.cate || "").split('-');
+            document.getElementById('selL1').value = parts[0] || ""; popL2();
+            document.getElementById('selL2').value = parts[1] || ""; popL3();
+            document.getElementById('selL3').value = parts[2] || "";
+            
             document.getElementById('modalTitle').innerText = "📝 編輯資料";
             document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active');
         }
+
         function delItem(id) { if(confirm("確定刪除？")) { const tx = db.transaction(STORE_NAME, "readwrite"); tx.objectStore(STORE_NAME).delete(id); tx.oncomplete = () => location.reload(); } }
         function doSearch() {
             const k = document.getElementById('sName').value.toLowerCase();
@@ -360,8 +485,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
