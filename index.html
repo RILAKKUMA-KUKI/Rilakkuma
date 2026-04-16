@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鬆弛熊圖𨯿</title>
+    <title>鬆弛熊圖鑑 </title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
     <style>
         :root { --h-blue: #4fd1ed; --bg-cream: #fefddd; --purple: #554477; --brown: #5c4a3d; --border: #e8e8e8; }
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 0; overflow-x: hidden; }
         
-        /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: white; border-bottom: 1px solid var(--border); position: fixed; top: 0; width: 100%; z-index: 1000; box-sizing: border-box; }
         .logo { font-size: 16px; font-weight: bold; color: var(--purple); }
 
-        /* Sidebar & Categories */
         .sidebar { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: white; z-index: 3000; transition: 0.3s; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); overflow-y: auto; box-sizing: border-box; }
         .sidebar.active { left: 0; }
         
@@ -22,13 +24,13 @@
         .cate-name.subsub { font-weight: normal; color: #888; font-size: 13px; }
         .del-x { color: #ccc; font-size: 16px; padding: 5px 10px; cursor: pointer; }
         
-        /* 摺疊選單樣式 */
+        .drag-handle { cursor: grab; }
         .toggle-btn { display: inline-block; width: 24px; text-align: center; color: #aaa; font-size: 12px; transition: 0.2s; cursor: pointer; }
         .toggle-btn.open { transform: rotate(90deg); color: var(--purple); }
-        .cate-group { display: none; padding-left: 20px; border-left: 2px solid var(--h-blue); margin-left: 12px; }
+        .cate-group { display: none; padding-left: 15px; border-left: 2px solid var(--h-blue); margin-left: 12px; min-height: 5px; }
         .cate-group.open { display: block; }
+        .sortable-ghost { opacity: 0.4; background-color: #f0f0f0; border-radius: 8px; }
 
-        /* Search Bar & Popover */
         .hero { background: var(--h-blue); padding: 75px 15px 25px; }
         .search-container { background: white; border-radius: 25px; display: flex; align-items: center; padding: 5px 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; }
         .search-container input { border: none; flex: 1; padding: 10px; outline: none; font-size: 14px; }
@@ -37,17 +39,14 @@
         .date-popover.active { display: block; }
         .date-popover input { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
 
-        /* Carousel */
         .carousel { width: 100%; aspect-ratio: 16/10; background: #fff; border-radius: 12px; overflow: hidden; position: relative; margin-top: 15px; }
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.5s; cursor: pointer; }
         .carousel-img.active { opacity: 1; z-index: 10; }
         
-        /* Grid Cards */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; min-height: 200px; }
         .card { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; }
         .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         
-        /* Intro Section */
         .intro-section { background-color: var(--bg-cream); padding: 40px 20px 60px; text-align: center; margin-top: 10px; overflow: hidden; }
         .intro-title { color: var(--brown); font-size: 24px; font-weight: bold; margin-bottom: 5px; }
         .scrolling-wrapper { width: 100%; }
@@ -64,7 +63,11 @@
         input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; background:#fafafa; }
         .btn-main { width: 100%; padding: 15px; background: var(--purple); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
-        /* 詳情頁圖片顯示器 */
+        .edit-preview-container { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 10px; }
+        .edit-preview-box { position: relative; flex-shrink: 0; }
+        .edit-preview-box img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc; }
+        .edit-preview-box .del-btn { position: absolute; top: -5px; right: -5px; background: #ff4444; color: white; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 20px; font-size: 14px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
         .h-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0; background: #fff; border-radius: 12px; overflow-y: hidden; }
         .h-scroll img { flex: 0 0 100%; width: 100%; max-height: 450px; object-fit: contain; scroll-snap-align: center; cursor: pointer; display: block; }
         .h-scroll::-webkit-scrollbar { display: none; }
@@ -79,21 +82,21 @@
 
     <div class="header">
         <div onclick="toggleSidebar(true)" style="font-size:24px; cursor:pointer;">☰</div>
-        <div class="logo">鬆弛熊圖𨯿</div>
+        <div class="logo">鬆弛熊圖鑑</div>
         <div>🐻</div>
     </div>
 
     <div class="sidebar" id="sb">
-        <h2 style="color:var(--purple); margin-top:0;">分類目錄</h2>
-        <div id="menuContent"></div>
+        <h2 style="color:var(--purple); margin-top:0;">分類目錄 <span style="font-size:12px; font-weight:normal; color:#888;">(長按可拖曳排序)</span></h2>
+        <div id="menuContent">讀取中...</div>
         <div style="margin-top:25px; padding:15px; background:#f4f4f4; border-radius:10px;">
             <p style="font-size:13px; color:#666; font-weight:bold; margin-top:0;">➕ 新增分類</p>
-            <input type="text" id="newMain" placeholder="大分類 (必填, 例: 鬆弛熊)">
-            <input type="text" id="newSub" placeholder="中分類 (選填, 例: 2026)">
-            <input type="text" id="newSubSub" placeholder="小分類 (選填, 例: 4月)">
+            <input type="text" id="newMain" placeholder="大分類 (必填)">
+            <input type="text" id="newSub" placeholder="中分類 (選填)">
+            <input type="text" id="newSubSub" placeholder="小分類 (選填)">
             <button onclick="addCate()" style="width:100%; padding:10px; background:var(--purple); color:white; border:none; border-radius:8px; margin-top:5px; cursor:pointer;">建立新分類</button>
         </div>
-        <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:12px; background:#e0e0e0; border:none; border-radius:10px; color:#333; cursor:pointer;">關閉側邊欄</button>
+        <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:12px; background:#e0e0e0; border:none; border-radius:10px; color:#333; cursor:pointer;">關閉</button>
     </div>
 
     <div class="overlay" id="ov" onclick="closeAll()"></div>
@@ -118,7 +121,7 @@
     </div>
 
     <h3 style="padding: 0 15px; color: var(--purple); margin-bottom: 0;">全部收藏</h3>
-    <div id="grid" class="grid"></div>
+    <div id="grid" class="grid">資料載入中...</div>
 
     <div class="intro-section">
         <div class="intro-title">Rilakkuma™</div>
@@ -153,7 +156,12 @@
         </div>
 
         <textarea id="desc" placeholder="詳情描述 (輸入網址會自動變成連結)" rows="3"></textarea>
-        <input type="file" id="imgs" accept="image/*" multiple>
+        
+        <p style="font-size:12px; color:#666; margin:15px 0 5px 0;">上傳圖片 / PDF (可多選)</p>
+        <input type="file" id="imgs" accept="image/*, application/pdf" multiple onchange="handleFileUpload(event)">
+        
+        <div id="editPreviewContainer" class="edit-preview-container"></div>
+        
         <input type="text" id="vid" placeholder="YouTube 網址/Shorts">
         <button onclick="save()" id="saveBtn" class="btn-main" style="margin-top:15px;">儲存收藏</button>
         <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; padding:15px; margin-top:5px; cursor:pointer;">取消</button>
@@ -166,11 +174,18 @@
     </div>
 
     <script>
+        // 加上 try-catch 防止 PDF 載入失敗導致整個網頁掛掉
+        try {
+            if (typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+            }
+        } catch(e) { console.error("PDF 工具載入失敗", e); }
+
         const DB_NAME = "BearMuseumDB";
         const STORE_NAME = "ItemsStore";
         const CATE_STORE = "CateStore";
-        // 預設資料結構升級為物件格式 (三級樹狀)
         let db, items = [], cates = { "一般類別": { "毛公仔": [], "文具": [] }, "鬆弛熊": { "生活用品": [] } };
+        let tempImgs = [];
 
         const request = indexedDB.open(DB_NAME, 2);
         request.onupgradeneeded = e => {
@@ -179,43 +194,55 @@
             if (!db.objectStoreNames.contains(CATE_STORE)) db.createObjectStore(CATE_STORE, { keyPath: "id" });
         };
         request.onsuccess = e => { db = e.target.result; loadAll(); };
+        request.onerror = e => { alert("無法開啟資料庫，請確認瀏覽器設定！"); };
 
         async function loadAll() {
-            const tx = db.transaction([STORE_NAME, CATE_STORE], "readonly");
-            items = await new Promise(res => {
-                const req = tx.objectStore(STORE_NAME).getAll();
-                req.onsuccess = () => {
-                    let resultItems = req.result;
-                    resultItems.sort((a, b) => {
-                        const dateA = a.date || "0000-00-00";
-                        const dateB = b.date || "0000-00-00";
-                        if (dateA !== dateB) return dateB.localeCompare(dateA);
-                        return b.id - a.id;
-                    });
-                    res(resultItems);
-                };
-            });
-            const cateRes = await new Promise(res => {
-                const req = tx.objectStore(CATE_STORE).get("main_cates");
-                req.onsuccess = () => res(req.result);
-            });
-            
-            if (cateRes && cateRes.data) {
-                let loaded = cateRes.data;
-                // 向下兼容舊版 [大類: [小類]] 結構，轉換為 {大類: {小類: []}}
-                for (let m in loaded) {
-                    if (Array.isArray(loaded[m])) {
-                        let tempObj = {};
-                        loaded[m].forEach(s => tempObj[s] = []);
-                        loaded[m] = tempObj;
+            try {
+                const tx = db.transaction([STORE_NAME, CATE_STORE], "readonly");
+                items = await new Promise(res => {
+                    const req = tx.objectStore(STORE_NAME).getAll();
+                    req.onsuccess = () => {
+                        let resultItems = req.result;
+                        resultItems.sort((a, b) => {
+                            const dateA = a.date || "0000-00-00";
+                            const dateB = b.date || "0000-00-00";
+                            if (dateA !== dateB) return dateB.localeCompare(dateA);
+                            return b.id - a.id;
+                        });
+                        res(resultItems);
+                    };
+                });
+                
+                const cateRes = await new Promise(res => {
+                    const req = tx.objectStore(CATE_STORE).get("main_cates");
+                    req.onsuccess = () => res(req.result);
+                });
+                
+                if (cateRes && cateRes.data) {
+                    let loaded = cateRes.data;
+                    for (let m in loaded) {
+                        if (Array.isArray(loaded[m])) {
+                            let tempObj = {};
+                            loaded[m].forEach(s => tempObj[s] = []);
+                            loaded[m] = tempObj;
+                        }
                     }
+                    cates = loaded;
                 }
-                cates = loaded;
+                
+                // 防彈設計：先渲染資料，就算後面的工具壞掉，資料也一定出得來！
+                render(items); 
+                try { renderMenu(); } catch(e) { console.error("選單渲染錯誤", e); }
+                try { popL1(); } catch(e) { console.error("分類選單錯誤", e); }
+                try { startCarousel(); } catch(e) { console.error("輪播錯誤", e); }
+                
+            } catch (err) {
+                console.error("資料讀取重大錯誤", err);
+                document.getElementById('grid').innerHTML = "讀取資料發生錯誤，請重新整理。";
             }
-            renderMenu(); popL1(); render(); startCarousel();
         }
 
-        /* ------------------ 目錄與摺疊邏輯 ------------------ */
+        /* ------------------ 目錄與拖曳排序邏輯 ------------------ */
         function toggleFolder(el, targetId) {
             el.classList.toggle('open');
             document.getElementById(targetId).classList.toggle('open');
@@ -223,53 +250,87 @@
 
         function filterCate(c) {
             if(c === 'all') render(items);
-            // 比對是否等於該分類，或者屬於該分類底下的子項目
             else render(items.filter(x => x.cate === c || (x.cate && x.cate.startsWith(c + '-'))));
             toggleSidebar(false);
         }
 
         function renderMenu() {
             let html = `<div class="cate-row"><span class="cate-name" onclick="filterCate('all')">📚 顯示全部</span></div>`;
-            let mIdx = 0;
+            html += `<div id="sortable-main">`;
+            
             for(let m in cates) {
-                let mId = `f-m-${mIdx++}`;
                 let hasSub = Object.keys(cates[m]).length > 0;
-                html += `
-                <div class="cate-row">
-                    <span class="toggle-btn" style="visibility:${hasSub?'visible':'hidden'}" onclick="toggleFolder(this, '${mId}')">▶</span>
-                    <span class="cate-name" onclick="filterCate('${m}')">${m}</span>
-                    <span class="del-x" onclick="delCate(event, '${m}')">✕</span>
-                </div>`;
+                let folderId = `f-m-${m.replace(/\s+/g, '')}`;
                 
-                if (hasSub) {
-                    html += `<div id="${mId}" class="cate-group">`;
-                    let sIdx = 0;
-                    for(let s in cates[m]) {
-                        let sId = `${mId}-s-${sIdx++}`;
-                        let hasSubSub = cates[m][s].length > 0;
-                        html += `
+                html += `<div class="main-item drag-handle" data-main="${m}">
+                    <div class="cate-row">
+                        <span class="toggle-btn" style="visibility:${hasSub?'visible':'hidden'}" onclick="toggleFolder(this, '${folderId}')">▶</span>
+                        <span class="cate-name" onclick="filterCate('${m}')">${m}</span>
+                        <span class="del-x" onclick="delCate(event, '${m}')">✕</span>
+                    </div><div id="${folderId}" class="cate-group sortable-sub open" style="margin-bottom:10px;">`; 
+                
+                for(let s in cates[m]) {
+                    let hasSubSub = cates[m][s].length > 0;
+                    let subFolderId = `f-s-${m.replace(/\s+/g, '')}-${s.replace(/\s+/g, '')}`;
+                    
+                    html += `<div class="sub-item drag-handle" data-sub="${s}">
                         <div class="cate-row" style="padding: 8px 0;">
-                            <span class="toggle-btn" style="visibility:${hasSubSub?'visible':'hidden'}" onclick="toggleFolder(this, '${sId}')">▶</span>
+                            <span class="toggle-btn open" style="visibility:${hasSubSub?'visible':'hidden'}" onclick="toggleFolder(this, '${subFolderId}')">▶</span>
                             <span class="cate-name sub" onclick="filterCate('${m}-${s}')">${s}</span>
                             <span class="del-x" onclick="delCate(event, '${m}', '${s}')">✕</span>
-                        </div>`;
-                        
-                        if (hasSubSub) {
-                            html += `<div id="${sId}" class="cate-group">`;
-                            cates[m][s].forEach(ss => {
-                                html += `
-                                <div class="cate-row" style="padding: 6px 0;">
-                                    <span class="cate-name subsub" style="margin-left:24px;" onclick="filterCate('${m}-${s}-${ss}')">• ${ss}</span>
-                                    <span class="del-x" onclick="delCate(event, '${m}', '${s}', '${ss}')">✕</span>
-                                </div>`;
-                            });
-                            html += `</div>`;
-                        }
-                    }
-                    html += `</div>`;
+                        </div><div id="${subFolderId}" class="cate-group sortable-subsub open">`;
+                    
+                    cates[m][s].forEach(ss => {
+                        html += `<div class="subsub-item drag-handle" data-subsub="${ss}">
+                            <div class="cate-row" style="padding: 6px 0;">
+                                <span class="cate-name subsub" style="margin-left:24px;" onclick="filterCate('${m}-${s}-${ss}')">• ${ss}</span>
+                                <span class="del-x" onclick="delCate(event, '${m}', '${s}', '${ss}')">✕</span>
+                            </div></div>`;
+                    });
+                    html += `</div></div>`;
                 }
+                html += `</div></div>`;
             }
+            html += `</div>`;
             document.getElementById('menuContent').innerHTML = html;
+            
+            // 防彈設計：確保 Sortable 存在才執行，避免報錯卡死
+            if (typeof Sortable !== 'undefined') {
+                initSortable();
+            }
+        }
+
+        function initSortable() {
+            const commonOpts = { delay: 250, delayOnTouchOnly: true, animation: 150, handle: '.drag-handle', onEnd: saveMenuOrder };
+            new Sortable(document.getElementById('sortable-main'), { ...commonOpts, group: 'main' });
+            document.querySelectorAll('.sortable-sub').forEach(el => new Sortable(el, { ...commonOpts, group: 'sub' }));
+            document.querySelectorAll('.sortable-subsub').forEach(el => new Sortable(el, { ...commonOpts, group: 'subsub' }));
+        }
+
+        function saveMenuOrder() {
+            let newCates = {};
+            document.querySelectorAll('.main-item').forEach(mEl => {
+                let mName = mEl.getAttribute('data-main');
+                if(!mName) return;
+                newCates[mName] = {};
+                let subGroup = mEl.querySelector(':scope > .sortable-sub');
+                if (subGroup) {
+                    subGroup.querySelectorAll(':scope > .sub-item').forEach(sEl => {
+                        let sName = sEl.getAttribute('data-sub');
+                        if(!sName) return;
+                        newCates[mName][sName] = [];
+                        let subsubGroup = sEl.querySelector(':scope > .sortable-subsub');
+                        if (subsubGroup) {
+                            subsubGroup.querySelectorAll(':scope > .subsub-item').forEach(ssEl => {
+                                let ssName = ssEl.getAttribute('data-subsub');
+                                if(ssName) newCates[mName][sName].push(ssName);
+                            });
+                        }
+                    });
+                }
+            });
+            cates = newCates;
+            saveCates().then(() => popL1());
         }
 
         async function saveCates() {
@@ -281,30 +342,23 @@
             e.stopPropagation();
             let name = ss ? ss : (s ? s : m);
             if(!confirm(`確定刪除分類「${name}」？(請注意：原屬於此分類的物品不會被刪除)`)) return;
-            
             if (ss) cates[m][s] = cates[m][s].filter(x => x !== ss);
             else if (s) delete cates[m][s];
             else delete cates[m];
-            
-            saveCates().then(() => { loadAll(); });
+            saveCates().then(() => loadAll());
         }
 
         function addCate() {
             let m = document.getElementById('newMain').value.trim();
             let s = document.getElementById('newSub').value.trim();
             let ss = document.getElementById('newSubSub').value.trim();
-            
             if(!m) return alert("請至少填寫「大分類」！");
             if(!cates[m]) cates[m] = {};
             if(s && !cates[m][s]) cates[m][s] = [];
             if(s && ss && !cates[m][s].includes(ss)) cates[m][s].push(ss);
-            
             saveCates().then(() => {
                 loadAll();
-                document.getElementById('newMain').value = ""; 
-                document.getElementById('newSub').value = ""; 
-                document.getElementById('newSubSub').value = "";
-                alert("建立成功！");
+                document.getElementById('newMain').value = ""; document.getElementById('newSub').value = ""; document.getElementById('newSubSub').value = "";
             });
         }
 
@@ -312,61 +366,65 @@
         function popL1() {
             let s = `<option value="">-- 主分類 (必選) --</option>`;
             for(let m in cates) s += `<option value="${m}">${m}</option>`;
-            document.getElementById('selL1').innerHTML = s;
-            popL2();
+            document.getElementById('selL1').innerHTML = s; popL2();
         }
         function popL2() {
             let m = document.getElementById('selL1').value;
             let s = `<option value="">-- 中分類 (選填) --</option>`;
-            if(m && cates[m]) {
-                for(let sub in cates[m]) s += `<option value="${sub}">${sub}</option>`;
-            }
-            document.getElementById('selL2').innerHTML = s;
-            popL3();
+            if(m && cates[m]) for(let sub in cates[m]) s += `<option value="${sub}">${sub}</option>`;
+            document.getElementById('selL2').innerHTML = s; popL3();
         }
         function popL3() {
-            let m = document.getElementById('selL1').value;
-            let sub = document.getElementById('selL2').value;
+            let m = document.getElementById('selL1').value; let sub = document.getElementById('selL2').value;
             let s = `<option value="">-- 小分類 (選填) --</option>`;
-            if(m && sub && cates[m] && cates[m][sub]) {
-                cates[m][sub].forEach(ss => s += `<option value="${ss}">${ss}</option>`);
-            }
+            if(m && sub && cates[m] && cates[m][sub]) cates[m][sub].forEach(ss => s += `<option value="${ss}">${ss}</option>`);
             document.getElementById('selL3').innerHTML = s;
         }
 
-        /* ------------------ 核心功能 ------------------ */
-        async function save() {
+        /* ------------------ PDF 處理與圖片編輯邏輯 ------------------ */
+        async function handleFileUpload(e) {
+            const files = e.target.files;
+            if(!files.length) return;
             const btn = document.getElementById('saveBtn');
-            btn.innerText = "儲存中..."; btn.disabled = true;
-            const id = document.getElementById('editId').value;
-            const files = document.getElementById('imgs').files;
-            let imgArray = [];
-            if(files.length > 0) {
-                for(let f of files) imgArray.push(await compressImage(f));
-            } else if(id) {
-                imgArray = items.find(x => x.id == id).imgs;
-            }
+            btn.innerText = "處理圖片/PDF中..."; btn.disabled = true;
             
-            // 組合分類字串
-            let l1 = document.getElementById('selL1').value;
-            let l2 = document.getElementById('selL2').value;
-            let l3 = document.getElementById('selL3').value;
-            let cateString = [l1, l2, l3].filter(Boolean).join('-');
-            if (!cateString) cateString = "未分類";
-
-            const data = {
-                id: id ? parseInt(id) : Date.now(),
-                name: document.getElementById('n').value,
-                date: document.getElementById('dt').value,
-                cate: cateString,
-                desc: document.getElementById('desc').value,
-                vid: document.getElementById('vid').value,
-                imgs: imgArray
-            };
-            const tx = db.transaction(STORE_NAME, "readwrite");
-            tx.objectStore(STORE_NAME).put(data);
-            tx.oncomplete = () => location.reload();
+            for(let file of files) {
+                if(file.type === 'application/pdf') {
+                    if (typeof pdfjsLib === 'undefined') {
+                        alert("目前無網路連線或 PDF 工具載入失敗，無法轉換 PDF。");
+                        continue;
+                    }
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                        for(let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const viewport = page.getViewport({scale: 1.5});
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = viewport.width; canvas.height = viewport.height;
+                            await page.render({canvasContext: ctx, viewport: viewport}).promise;
+                            tempImgs.push(canvas.toDataURL('image/jpeg', 0.8));
+                        }
+                    } catch (err) { alert("PDF 讀取失敗！"); console.error(err); }
+                } else if (file.type.startsWith('image/')) {
+                    tempImgs.push(await compressImage(file));
+                }
+            }
+            renderEditPreview();
+            btn.innerText = "儲存收藏"; btn.disabled = false;
+            e.target.value = "";
         }
+
+        function renderEditPreview() {
+            let html = "";
+            tempImgs.forEach((imgBase64, idx) => {
+                html += `<div class="edit-preview-box"><img src="${imgBase64}"><div class="del-btn" onclick="removeTempImg(${idx})">×</div></div>`;
+            });
+            document.getElementById('editPreviewContainer').innerHTML = html;
+        }
+
+        function removeTempImg(idx) { tempImgs.splice(idx, 1); renderEditPreview(); }
 
         function compressImage(file, maxDim = 1080) {
             return new Promise(res => {
@@ -386,8 +444,27 @@
             });
         }
 
+        async function save() {
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "儲存中..."; btn.disabled = true;
+            const id = document.getElementById('editId').value;
+            let cateString = [document.getElementById('selL1').value, document.getElementById('selL2').value, document.getElementById('selL3').value].filter(Boolean).join('-');
+            if (!cateString) cateString = "未分類";
+
+            const data = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('n').value, date: document.getElementById('dt').value,
+                cate: cateString, desc: document.getElementById('desc').value, vid: document.getElementById('vid').value,
+                imgs: [...tempImgs]
+            };
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).put(data);
+            tx.oncomplete = () => location.reload();
+        }
+
+        /* ------------------ 渲染與顯示 ------------------ */
         function render(list = items) {
-            document.getElementById('grid').innerHTML = list.length === 0 ? `<div style="grid-column: span 2; text-align:center; padding: 40px 0;">空空如也</div>` : 
+            document.getElementById('grid').innerHTML = list.length === 0 ? `<div style="grid-column: span 2; text-align:center; padding: 40px 0; color:#888;">空空如也</div>` : 
             list.map(x => `<div class="card" onclick="openDetail(${x.id})"><img src="${x.imgs[0] || ''}"><div style="padding:10px; font-size:13px; font-weight:bold;">${x.name}</div></div>`).join('');
             
             if(items.length > 0) {
@@ -409,10 +486,8 @@
             }, 5000);
         }
 
-        // 轉換描述中的 URL 為可點擊連結
         function formatDesc(text) {
             if(!text) return '無描述';
-            // 基本的防XSS，並將網址轉換為 <a> 標籤
             let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             return safeText.replace(urlRegex, '<a href="$1" target="_blank" style="color:var(--h-blue); text-decoration:underline; word-break: break-all;">$1</a>');
@@ -438,8 +513,7 @@
                 <button onclick="delItem(${x.id})" style="color:#ff4444; background:none; border:none; width:100%; margin-top:20px; padding:10px;">🗑️ 刪除記錄</button>
             `;
             document.getElementById('editBtn').onclick = () => openEdit(x);
-            document.getElementById('dtM').classList.add('active');
-            document.getElementById('ov').classList.add('active');
+            document.getElementById('dtM').classList.add('active'); document.getElementById('ov').classList.add('active');
         }
 
         function openViewer(src) { document.getElementById('viewerImg').src = src; document.getElementById('imgViewer').classList.add('active'); }
@@ -450,6 +524,7 @@
         function openAdd() { 
             document.getElementById('editId').value = ""; document.getElementById('n').value = ""; document.getElementById('dt').value = ""; document.getElementById('desc').value = ""; document.getElementById('vid').value = "";
             document.getElementById('selL1').value = ""; popL2();
+            tempImgs = []; renderEditPreview();
             document.getElementById('modalTitle').innerText = "➕ 加入收藏";
             document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active'); 
         }
@@ -458,13 +533,11 @@
             closeAll();
             document.getElementById('editId').value = x.id; document.getElementById('n').value = x.name; document.getElementById('dt').value = x.date; 
             document.getElementById('desc').value = x.desc; document.getElementById('vid').value = x.vid;
-            
-            // 解析回填三級分類
             let parts = (x.cate || "").split('-');
             document.getElementById('selL1').value = parts[0] || ""; popL2();
             document.getElementById('selL2').value = parts[1] || ""; popL3();
             document.getElementById('selL3').value = parts[2] || "";
-            
+            tempImgs = [...(x.imgs || [])]; renderEditPreview();
             document.getElementById('modalTitle').innerText = "📝 編輯資料";
             document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active');
         }
@@ -485,3 +558,4 @@
     </script>
 </body>
 </html>
+
