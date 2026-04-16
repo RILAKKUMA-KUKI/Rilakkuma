@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鬆弛熊圖鑑 </title>
+    <title>鬆弛熊圖鑑</title>
     
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -54,7 +54,12 @@
         .scrolling-track img { width: 130px; height: 130px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
         @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         
-        .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--purple); color: white; border-radius: 50%; border: none; font-size: 30px; z-index: 1500; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        /* 浮動按鈕群組設計 (加入備份與還原按鈕) */
+        .fab-group { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 1500; }
+        .fab { width: 60px; height: 60px; background: var(--purple); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .fab.export-btn { background: #4caf50; font-size: 24px; width: 45px; height: 45px; }
+        .fab.import-btn { background: #ff9800; font-size: 24px; width: 45px; height: 45px; }
+
         .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; display:none; }
         .overlay.active { display:block; }
         
@@ -87,7 +92,7 @@
     </div>
 
     <div class="sidebar" id="sb">
-        <h2 style="color:var(--purple); margin-top:0;">分類目錄 <span style="font-size:12px; font-weight:normal; color:#888;">(長按可拖曳排序)</span></h2>
+        <h2 style="color:var(--purple); margin-top:0;">分類目錄 <span style="font-size:12px; font-weight:normal; color:#888;">(長按可拖曳)</span></h2>
         <div id="menuContent">讀取中...</div>
         <div style="margin-top:25px; padding:15px; background:#f4f4f4; border-radius:10px;">
             <p style="font-size:13px; color:#666; font-weight:bold; margin-top:0;">➕ 新增分類</p>
@@ -140,7 +145,13 @@
         </div>
     </div>
 
-    <button class="fab" onclick="openAdd()">+</button>
+    <div class="fab-group">
+        <button class="fab import-btn" onclick="document.getElementById('importFile').click()" title="匯入/恢復備份">📂</button>
+        <button class="fab export-btn" onclick="exportData()" title="匯出/下載備份">💾</button>
+        <button class="fab" onclick="openAdd()">+</button>
+    </div>
+    
+    <input type="file" id="importFile" style="display:none" onchange="importData(event)" accept=".json">
 
     <div class="modal" id="addM">
         <h2 id="modalTitle" style="margin-top:0;">➕ 加入收藏</h2>
@@ -174,7 +185,7 @@
     </div>
 
     <script>
-        // 加上 try-catch 防止 PDF 載入失敗導致整個網頁掛掉
+        // 加上 try-catch 防止 PDF 載入失敗導致整個網頁掛掉 (v8.5.1 防彈機制)
         try {
             if (typeof pdfjsLib !== 'undefined') {
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -184,7 +195,7 @@
         const DB_NAME = "BearMuseumDB";
         const STORE_NAME = "ItemsStore";
         const CATE_STORE = "CateStore";
-        let db, items = [], cates = { "一般類別": { "毛公仔": [], "文具": [] }, "鬆弛熊": { "生活用品": [] } };
+        let db, items = [], cates = { "一般類別": { "公仔": [], "文具": [] }, "鬆弛熊": { "限定": [] } };
         let tempImgs = [];
 
         const request = indexedDB.open(DB_NAME, 2);
@@ -230,7 +241,6 @@
                     cates = loaded;
                 }
                 
-                // 防彈設計：先渲染資料，就算後面的工具壞掉，資料也一定出得來！
                 render(items); 
                 try { renderMenu(); } catch(e) { console.error("選單渲染錯誤", e); }
                 try { popL1(); } catch(e) { console.error("分類選單錯誤", e); }
@@ -242,7 +252,7 @@
             }
         }
 
-        /* ------------------ 目錄與拖曳排序邏輯 ------------------ */
+        /* ------------------ 目錄與拖曳排序邏輯 (預設摺疊) ------------------ */
         function toggleFolder(el, targetId) {
             el.classList.toggle('open');
             document.getElementById(targetId).classList.toggle('open');
@@ -262,23 +272,25 @@
                 let hasSub = Object.keys(cates[m]).length > 0;
                 let folderId = `f-m-${m.replace(/\s+/g, '')}`;
                 
+                // 移除 open class，預設摺疊
                 html += `<div class="main-item drag-handle" data-main="${m}">
                     <div class="cate-row">
                         <span class="toggle-btn" style="visibility:${hasSub?'visible':'hidden'}" onclick="toggleFolder(this, '${folderId}')">▶</span>
                         <span class="cate-name" onclick="filterCate('${m}')">${m}</span>
                         <span class="del-x" onclick="delCate(event, '${m}')">✕</span>
-                    </div><div id="${folderId}" class="cate-group sortable-sub open" style="margin-bottom:10px;">`; 
+                    </div><div id="${folderId}" class="cate-group sortable-sub" style="margin-bottom:10px;">`; 
                 
                 for(let s in cates[m]) {
                     let hasSubSub = cates[m][s].length > 0;
                     let subFolderId = `f-s-${m.replace(/\s+/g, '')}-${s.replace(/\s+/g, '')}`;
                     
+                    // 移除 open class，預設摺疊
                     html += `<div class="sub-item drag-handle" data-sub="${s}">
                         <div class="cate-row" style="padding: 8px 0;">
-                            <span class="toggle-btn open" style="visibility:${hasSubSub?'visible':'hidden'}" onclick="toggleFolder(this, '${subFolderId}')">▶</span>
+                            <span class="toggle-btn" style="visibility:${hasSubSub?'visible':'hidden'}" onclick="toggleFolder(this, '${subFolderId}')">▶</span>
                             <span class="cate-name sub" onclick="filterCate('${m}-${s}')">${s}</span>
                             <span class="del-x" onclick="delCate(event, '${m}', '${s}')">✕</span>
-                        </div><div id="${subFolderId}" class="cate-group sortable-subsub open">`;
+                        </div><div id="${subFolderId}" class="cate-group sortable-subsub">`;
                     
                     cates[m][s].forEach(ss => {
                         html += `<div class="subsub-item drag-handle" data-subsub="${ss}">
@@ -294,7 +306,6 @@
             html += `</div>`;
             document.getElementById('menuContent').innerHTML = html;
             
-            // 防彈設計：確保 Sortable 存在才執行，避免報錯卡死
             if (typeof Sortable !== 'undefined') {
                 initSortable();
             }
@@ -360,6 +371,67 @@
                 loadAll();
                 document.getElementById('newMain').value = ""; document.getElementById('newSub').value = ""; document.getElementById('newSubSub').value = "";
             });
+        }
+
+        /* ------------------ 備份與還原邏輯 (v8.6 新增) ------------------ */
+        async function exportData() {
+            try {
+                const tx = db.transaction([STORE_NAME, CATE_STORE], "readonly");
+                const itemsData = await new Promise(res => {
+                    const req = tx.objectStore(STORE_NAME).getAll();
+                    req.onsuccess = () => res(req.result);
+                });
+                const catesData = await new Promise(res => {
+                    const req = tx.objectStore(CATE_STORE).get("main_cates");
+                    req.onsuccess = () => res(req.result);
+                });
+
+                const backupData = {
+                    version: "v8.6.1-github",
+                    date: new Date().toISOString(),
+                    items: itemsData,
+                    cates: catesData ? catesData.data : null
+                };
+
+                const blob = new Blob([JSON.stringify(backupData)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `鬆弛熊圖鑑備份_${new Date().toLocaleDateString()}.json`;
+                a.click();
+            } catch(e) {
+                alert("匯出失敗，請確認資料庫狀態。");
+            }
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (!confirm(`找到 ${data.items.length} 筆資料！\n是否要匯入並合併至現有資料庫中？`)) return;
+
+                    const tx = db.transaction([STORE_NAME, CATE_STORE], "readwrite");
+                    
+                    data.items.forEach(item => tx.objectStore(STORE_NAME).put(item));
+                    
+                    if (data.cates) {
+                        tx.objectStore(CATE_STORE).put({ id: "main_cates", data: data.cates });
+                    }
+
+                    tx.oncomplete = () => {
+                        alert("🎉 恢復成功！網頁即將重新整理。");
+                        location.reload();
+                    };
+                } catch (err) {
+                    alert("匯入失敗，請確認你選擇的是正確的 JSON 備份檔。");
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ""; // 重設選擇器，允許重複選擇同一個檔案
         }
 
         /* ------------------ 聯動式資料輸入選單 ------------------ */
