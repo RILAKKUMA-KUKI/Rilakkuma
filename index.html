@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>鬆弛熊圖𨯿</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
     <style>
         :root { --h-blue: #4fd1ed; --bg-cream: #fefddd; --purple: #554477; --brown: #5c4a3d; --border: #e8e8e8; }
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 0; overflow-x: hidden; }
@@ -26,15 +22,11 @@
         .cate-name.subsub { font-weight: normal; color: #888; font-size: 13px; }
         .del-x { color: #ccc; font-size: 16px; padding: 5px 10px; cursor: pointer; }
         
-        /* 拖曳與摺疊 */
-        .drag-handle { cursor: grab; }
+        /* 摺疊選單樣式 */
         .toggle-btn { display: inline-block; width: 24px; text-align: center; color: #aaa; font-size: 12px; transition: 0.2s; cursor: pointer; }
         .toggle-btn.open { transform: rotate(90deg); color: var(--purple); }
-        .cate-group { display: none; padding-left: 15px; border-left: 2px solid var(--h-blue); margin-left: 12px; min-height: 5px; }
+        .cate-group { display: none; padding-left: 20px; border-left: 2px solid var(--h-blue); margin-left: 12px; }
         .cate-group.open { display: block; }
-
-        /* SortableJS 拖曳時的樣式 */
-        .sortable-ghost { opacity: 0.4; background-color: #f0f0f0; border-radius: 8px; }
 
         /* Search Bar & Popover */
         .hero { background: var(--h-blue); padding: 75px 15px 25px; }
@@ -72,12 +64,6 @@
         input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; background:#fafafa; }
         .btn-main { width: 100%; padding: 15px; background: var(--purple); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
-        /* 圖片預覽區塊 (新增與編輯) */
-        .edit-preview-container { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 10px; }
-        .edit-preview-box { position: relative; flex-shrink: 0; }
-        .edit-preview-box img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc; }
-        .edit-preview-box .del-btn { position: absolute; top: -5px; right: -5px; background: #ff4444; color: white; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 20px; font-size: 14px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-
         /* 詳情頁圖片顯示器 */
         .h-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0; background: #fff; border-radius: 12px; overflow-y: hidden; }
         .h-scroll img { flex: 0 0 100%; width: 100%; max-height: 450px; object-fit: contain; scroll-snap-align: center; cursor: pointer; display: block; }
@@ -98,16 +84,16 @@
     </div>
 
     <div class="sidebar" id="sb">
-        <h2 style="color:var(--purple); margin-top:0;">分類目錄 <span style="font-size:12px; font-weight:normal; color:#888;">(長按可拖曳排序)</span></h2>
+        <h2 style="color:var(--purple); margin-top:0;">分類目錄</h2>
         <div id="menuContent"></div>
         <div style="margin-top:25px; padding:15px; background:#f4f4f4; border-radius:10px;">
             <p style="font-size:13px; color:#666; font-weight:bold; margin-top:0;">➕ 新增分類</p>
-            <input type="text" id="newMain" placeholder="大分類 (必填)">
-            <input type="text" id="newSub" placeholder="中分類 (選填)">
-            <input type="text" id="newSubSub" placeholder="小分類 (選填)">
+            <input type="text" id="newMain" placeholder="大分類 (必填, 例: 鬆弛熊)">
+            <input type="text" id="newSub" placeholder="中分類 (選填, 例: 2026)">
+            <input type="text" id="newSubSub" placeholder="小分類 (選填, 例: 4月)">
             <button onclick="addCate()" style="width:100%; padding:10px; background:var(--purple); color:white; border:none; border-radius:8px; margin-top:5px; cursor:pointer;">建立新分類</button>
         </div>
-        <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:12px; background:#e0e0e0; border:none; border-radius:10px; color:#333; cursor:pointer;">關閉</button>
+        <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:12px; background:#e0e0e0; border:none; border-radius:10px; color:#333; cursor:pointer;">關閉側邊欄</button>
     </div>
 
     <div class="overlay" id="ov" onclick="closeAll()"></div>
@@ -167,12 +153,7 @@
         </div>
 
         <textarea id="desc" placeholder="詳情描述 (輸入網址會自動變成連結)" rows="3"></textarea>
-        
-        <p style="font-size:12px; color:#666; margin:15px 0 5px 0;">上傳圖片 / PDF (可多選)</p>
-        <input type="file" id="imgs" accept="image/*, application/pdf" multiple onchange="handleFileUpload(event)">
-        
-        <div id="editPreviewContainer" class="edit-preview-container"></div>
-        
+        <input type="file" id="imgs" accept="image/*" multiple>
         <input type="text" id="vid" placeholder="YouTube 網址/Shorts">
         <button onclick="save()" id="saveBtn" class="btn-main" style="margin-top:15px;">儲存收藏</button>
         <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; padding:15px; margin-top:5px; cursor:pointer;">取消</button>
@@ -185,16 +166,11 @@
     </div>
 
     <script>
-        // 設定 PDF.js Worker (轉換 PDF 必備)
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
         const DB_NAME = "BearMuseumDB";
         const STORE_NAME = "ItemsStore";
         const CATE_STORE = "CateStore";
-        let db, items = [], cates = { "一般類別": { "公仔": [], "文具": [] }, "鬆弛熊": { "生活用品": [] } };
-        
-        // 全域變數：用來暫存新增/編輯過程中的圖片
-        let tempImgs = [];
+        // 預設資料結構升級為物件格式 (三級樹狀)
+        let db, items = [], cates = { "一般類別": { "毛公仔": [], "文具": [] }, "鬆弛熊": { "生活用品": [] } };
 
         const request = indexedDB.open(DB_NAME, 2);
         request.onupgradeneeded = e => {
@@ -226,6 +202,7 @@
             
             if (cateRes && cateRes.data) {
                 let loaded = cateRes.data;
+                // 向下兼容舊版 [大類: [小類]] 結構，轉換為 {大類: {小類: []}}
                 for (let m in loaded) {
                     if (Array.isArray(loaded[m])) {
                         let tempObj = {};
@@ -238,7 +215,7 @@
             renderMenu(); popL1(); render(); startCarousel();
         }
 
-        /* ------------------ 目錄與拖曳排序邏輯 ------------------ */
+        /* ------------------ 目錄與摺疊邏輯 ------------------ */
         function toggleFolder(el, targetId) {
             el.classList.toggle('open');
             document.getElementById(targetId).classList.toggle('open');
@@ -246,112 +223,53 @@
 
         function filterCate(c) {
             if(c === 'all') render(items);
+            // 比對是否等於該分類，或者屬於該分類底下的子項目
             else render(items.filter(x => x.cate === c || (x.cate && x.cate.startsWith(c + '-'))));
             toggleSidebar(false);
         }
 
         function renderMenu() {
             let html = `<div class="cate-row"><span class="cate-name" onclick="filterCate('all')">📚 顯示全部</span></div>`;
-            html += `<div id="sortable-main">`; // 大分類排序容器
-            
+            let mIdx = 0;
             for(let m in cates) {
+                let mId = `f-m-${mIdx++}`;
                 let hasSub = Object.keys(cates[m]).length > 0;
-                let folderId = `f-m-${m.replace(/\s+/g, '')}`;
-                
                 html += `
-                <div class="main-item drag-handle" data-main="${m}">
-                    <div class="cate-row">
-                        <span class="toggle-btn" style="visibility:${hasSub?'visible':'hidden'}" onclick="toggleFolder(this, '${folderId}')">▶</span>
-                        <span class="cate-name" onclick="filterCate('${m}')">${m}</span>
-                        <span class="del-x" onclick="delCate(event, '${m}')">✕</span>
-                    </div>`;
+                <div class="cate-row">
+                    <span class="toggle-btn" style="visibility:${hasSub?'visible':'hidden'}" onclick="toggleFolder(this, '${mId}')">▶</span>
+                    <span class="cate-name" onclick="filterCate('${m}')">${m}</span>
+                    <span class="del-x" onclick="delCate(event, '${m}')">✕</span>
+                </div>`;
                 
-                // 中分類容器 (自動展開方便拖拉，若太多可預設隱藏，此處預設展開)
-                html += `<div id="${folderId}" class="cate-group sortable-sub open" style="margin-bottom:10px;">`; 
-                
-                for(let s in cates[m]) {
-                    let hasSubSub = cates[m][s].length > 0;
-                    let subFolderId = `f-s-${m.replace(/\s+/g, '')}-${s.replace(/\s+/g, '')}`;
-                    
-                    html += `
-                    <div class="sub-item drag-handle" data-sub="${s}">
+                if (hasSub) {
+                    html += `<div id="${mId}" class="cate-group">`;
+                    let sIdx = 0;
+                    for(let s in cates[m]) {
+                        let sId = `${mId}-s-${sIdx++}`;
+                        let hasSubSub = cates[m][s].length > 0;
+                        html += `
                         <div class="cate-row" style="padding: 8px 0;">
-                            <span class="toggle-btn open" style="visibility:${hasSubSub?'visible':'hidden'}" onclick="toggleFolder(this, '${subFolderId}')">▶</span>
+                            <span class="toggle-btn" style="visibility:${hasSubSub?'visible':'hidden'}" onclick="toggleFolder(this, '${sId}')">▶</span>
                             <span class="cate-name sub" onclick="filterCate('${m}-${s}')">${s}</span>
                             <span class="del-x" onclick="delCate(event, '${m}', '${s}')">✕</span>
                         </div>`;
-                    
-                    // 小分類容器
-                    html += `<div id="${subFolderId}" class="cate-group sortable-subsub open">`;
-                    cates[m][s].forEach(ss => {
-                        html += `
-                        <div class="subsub-item drag-handle" data-subsub="${ss}">
-                            <div class="cate-row" style="padding: 6px 0;">
-                                <span class="cate-name subsub" style="margin-left:24px;" onclick="filterCate('${m}-${s}-${ss}')">• ${ss}</span>
-                                <span class="del-x" onclick="delCate(event, '${m}', '${s}', '${ss}')">✕</span>
-                            </div>
-                        </div>`;
-                    });
-                    html += `</div></div>`;
-                }
-                html += `</div></div>`;
-            }
-            html += `</div>`;
-            document.getElementById('menuContent').innerHTML = html;
-            initSortable();
-        }
-
-        // 初始化拖曳排序
-        function initSortable() {
-            const commonOpts = { 
-                delay: 250, // 長按 0.25 秒才觸發，避免滑動時誤觸
-                delayOnTouchOnly: true, 
-                animation: 150, 
-                handle: '.drag-handle',
-                onEnd: saveMenuOrder // 拖曳結束後重新儲存結構
-            };
-            
-            // 讓大分類可以互相排序
-            new Sortable(document.getElementById('sortable-main'), { ...commonOpts, group: 'main' });
-            
-            // 讓中分類可以互相排序，甚至跨大分類移動
-            document.querySelectorAll('.sortable-sub').forEach(el => {
-                new Sortable(el, { ...commonOpts, group: 'sub' });
-            });
-            
-            // 讓小分類可以互相排序，跨中分類移動
-            document.querySelectorAll('.sortable-subsub').forEach(el => {
-                new Sortable(el, { ...commonOpts, group: 'subsub' });
-            });
-        }
-
-        // 解析 DOM 結構重新生成 cates 物件
-        function saveMenuOrder() {
-            let newCates = {};
-            document.querySelectorAll('.main-item').forEach(mEl => {
-                let mName = mEl.getAttribute('data-main');
-                if(!mName) return;
-                newCates[mName] = {};
-                
-                let subGroup = mEl.querySelector(':scope > .sortable-sub');
-                if (subGroup) {
-                    subGroup.querySelectorAll(':scope > .sub-item').forEach(sEl => {
-                        let sName = sEl.getAttribute('data-sub');
-                        if(!sName) return;
-                        newCates[mName][sName] = [];
                         
-                        let subsubGroup = sEl.querySelector(':scope > .sortable-subsub');
-                        if (subsubGroup) {
-                            subsubGroup.querySelectorAll(':scope > .subsub-item').forEach(ssEl => {
-                                let ssName = ssEl.getAttribute('data-subsub');
-                                if(ssName) newCates[mName][sName].push(ssName);
+                        if (hasSubSub) {
+                            html += `<div id="${sId}" class="cate-group">`;
+                            cates[m][s].forEach(ss => {
+                                html += `
+                                <div class="cate-row" style="padding: 6px 0;">
+                                    <span class="cate-name subsub" style="margin-left:24px;" onclick="filterCate('${m}-${s}-${ss}')">• ${ss}</span>
+                                    <span class="del-x" onclick="delCate(event, '${m}', '${s}', '${ss}')">✕</span>
+                                </div>`;
                             });
+                            html += `</div>`;
                         }
-                    });
+                    }
+                    html += `</div>`;
                 }
-            });
-            cates = newCates;
-            saveCates().then(() => { popL1(); });
+            }
+            document.getElementById('menuContent').innerHTML = html;
         }
 
         async function saveCates() {
@@ -386,6 +304,7 @@
                 document.getElementById('newMain').value = ""; 
                 document.getElementById('newSub').value = ""; 
                 document.getElementById('newSubSub').value = "";
+                alert("建立成功！");
             });
         }
 
@@ -415,61 +334,38 @@
             document.getElementById('selL3').innerHTML = s;
         }
 
-        /* ------------------ PDF 處理與圖片編輯邏輯 ------------------ */
-        // 當使用者選擇檔案時 (圖片或 PDF)
-        async function handleFileUpload(e) {
-            const files = e.target.files;
-            if(!files.length) return;
-            
+        /* ------------------ 核心功能 ------------------ */
+        async function save() {
             const btn = document.getElementById('saveBtn');
-            btn.innerText = "處理圖片/PDF中..."; btn.disabled = true;
-            
-            for(let file of files) {
-                if(file.type === 'application/pdf') {
-                    // PDF 轉換邏輯
-                    try {
-                        const arrayBuffer = await file.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-                        for(let i = 1; i <= pdf.numPages; i++) {
-                            const page = await pdf.getPage(i);
-                            const viewport = page.getViewport({scale: 1.5}); // 放大畫質
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            canvas.width = viewport.width; 
-                            canvas.height = viewport.height;
-                            await page.render({canvasContext: ctx, viewport: viewport}).promise;
-                            tempImgs.push(canvas.toDataURL('image/jpeg', 0.8));
-                        }
-                    } catch (err) {
-                        alert("PDF 讀取失敗，請確認檔案格式或網路連線！");
-                        console.error(err);
-                    }
-                } else if (file.type.startsWith('image/')) {
-                    // 一般圖片壓縮邏輯
-                    tempImgs.push(await compressImage(file));
-                }
+            btn.innerText = "儲存中..."; btn.disabled = true;
+            const id = document.getElementById('editId').value;
+            const files = document.getElementById('imgs').files;
+            let imgArray = [];
+            if(files.length > 0) {
+                for(let f of files) imgArray.push(await compressImage(f));
+            } else if(id) {
+                imgArray = items.find(x => x.id == id).imgs;
             }
             
-            renderEditPreview();
-            btn.innerText = "儲存收藏"; btn.disabled = false;
-            e.target.value = ""; // 清空 input 讓下次可以選同一張
-        }
+            // 組合分類字串
+            let l1 = document.getElementById('selL1').value;
+            let l2 = document.getElementById('selL2').value;
+            let l3 = document.getElementById('selL3').value;
+            let cateString = [l1, l2, l3].filter(Boolean).join('-');
+            if (!cateString) cateString = "未分類";
 
-        function renderEditPreview() {
-            let html = "";
-            tempImgs.forEach((imgBase64, idx) => {
-                html += `
-                <div class="edit-preview-box">
-                    <img src="${imgBase64}">
-                    <div class="del-btn" onclick="removeTempImg(${idx})">×</div>
-                </div>`;
-            });
-            document.getElementById('editPreviewContainer').innerHTML = html;
-        }
-
-        function removeTempImg(idx) {
-            tempImgs.splice(idx, 1);
-            renderEditPreview();
+            const data = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('n').value,
+                date: document.getElementById('dt').value,
+                cate: cateString,
+                desc: document.getElementById('desc').value,
+                vid: document.getElementById('vid').value,
+                imgs: imgArray
+            };
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).put(data);
+            tx.oncomplete = () => location.reload();
         }
 
         function compressImage(file, maxDim = 1080) {
@@ -490,29 +386,6 @@
             });
         }
 
-        async function save() {
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "儲存中..."; btn.disabled = true;
-            
-            const id = document.getElementById('editId').value;
-            let cateString = [document.getElementById('selL1').value, document.getElementById('selL2').value, document.getElementById('selL3').value].filter(Boolean).join('-');
-            if (!cateString) cateString = "未分類";
-
-            const data = {
-                id: id ? parseInt(id) : Date.now(),
-                name: document.getElementById('n').value,
-                date: document.getElementById('dt').value,
-                cate: cateString,
-                desc: document.getElementById('desc').value,
-                vid: document.getElementById('vid').value,
-                imgs: [...tempImgs] // 使用 tempImgs (包含新舊圖片)
-            };
-            const tx = db.transaction(STORE_NAME, "readwrite");
-            tx.objectStore(STORE_NAME).put(data);
-            tx.oncomplete = () => location.reload();
-        }
-
-        /* ------------------ 渲染與顯示 ------------------ */
         function render(list = items) {
             document.getElementById('grid').innerHTML = list.length === 0 ? `<div style="grid-column: span 2; text-align:center; padding: 40px 0;">空空如也</div>` : 
             list.map(x => `<div class="card" onclick="openDetail(${x.id})"><img src="${x.imgs[0] || ''}"><div style="padding:10px; font-size:13px; font-weight:bold;">${x.name}</div></div>`).join('');
@@ -536,8 +409,10 @@
             }, 5000);
         }
 
+        // 轉換描述中的 URL 為可點擊連結
         function formatDesc(text) {
             if(!text) return '無描述';
+            // 基本的防XSS，並將網址轉換為 <a> 標籤
             let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             return safeText.replace(urlRegex, '<a href="$1" target="_blank" style="color:var(--h-blue); text-decoration:underline; word-break: break-all;">$1</a>');
@@ -575,10 +450,6 @@
         function openAdd() { 
             document.getElementById('editId').value = ""; document.getElementById('n').value = ""; document.getElementById('dt').value = ""; document.getElementById('desc').value = ""; document.getElementById('vid').value = "";
             document.getElementById('selL1').value = ""; popL2();
-            
-            tempImgs = []; // 清空暫存圖庫
-            renderEditPreview();
-            
             document.getElementById('modalTitle').innerText = "➕ 加入收藏";
             document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active'); 
         }
@@ -588,14 +459,11 @@
             document.getElementById('editId').value = x.id; document.getElementById('n').value = x.name; document.getElementById('dt').value = x.date; 
             document.getElementById('desc').value = x.desc; document.getElementById('vid').value = x.vid;
             
+            // 解析回填三級分類
             let parts = (x.cate || "").split('-');
             document.getElementById('selL1').value = parts[0] || ""; popL2();
             document.getElementById('selL2').value = parts[1] || ""; popL3();
             document.getElementById('selL3').value = parts[2] || "";
-            
-            // 將原本的圖片載入暫存圖庫並顯示預覽
-            tempImgs = [...(x.imgs || [])];
-            renderEditPreview();
             
             document.getElementById('modalTitle').innerText = "📝 編輯資料";
             document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active');
