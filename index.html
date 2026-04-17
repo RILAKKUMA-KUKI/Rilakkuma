@@ -4,41 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>鬆弛熊圖鑑</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
     <style>
         :root { --h-blue: #4fd1ed; --bg-cream: #fefddd; --purple: #554477; --brown: #5c4a3d; --border: #e8e8e8; }
         body { font-family: -apple-system, sans-serif; background: #fff; margin: 0; padding: 0; overflow-x: hidden; }
         
+        /* iOS Input Fix */
+        input[type="date"], input[type="month"], input[type="text"], select, textarea { 
+            appearance: none; -webkit-appearance: none; 
+            background-color: #fafafa; border: 1px solid #eee; border-radius: 8px; 
+            color: #333; padding: 12px; width: 100%; box-sizing: border-box; margin: 6px 0; font-family: inherit;
+        }
+
+        /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: white; border-bottom: 1px solid var(--border); position: fixed; top: 0; width: 100%; z-index: 1000; box-sizing: border-box; }
         .logo { font-size: 16px; font-weight: bold; color: var(--purple); }
 
+        /* Sidebar & Categories */
         .sidebar { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: white; z-index: 3000; transition: 0.3s; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.1); overflow-y: auto; box-sizing: border-box; }
         .sidebar.active { left: 0; }
         
-        .cate-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .cate-node { margin-bottom: 2px; }
+        .cate-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; background: #fff; }
         .cate-name { font-weight: bold; color: var(--purple); flex: 1; cursor: pointer; }
         .cate-name.sub { font-weight: normal; color: #555; }
         .cate-name.subsub { font-weight: normal; color: #888; font-size: 13px; }
-        .del-x { color: #ccc; font-size: 16px; padding: 5px 10px; cursor: pointer; }
         
-        .drag-handle { cursor: grab; }
+        .action-btns { display: flex; gap: 8px; color: #999; font-size: 14px; }
+        .btn-icon { cursor: pointer; padding: 2px 5px; border-radius: 4px; }
+        .btn-icon:hover { background: #f0f0f0; }
+
         .toggle-btn { display: inline-block; width: 24px; text-align: center; color: #aaa; font-size: 12px; transition: 0.2s; cursor: pointer; }
         .toggle-btn.open { transform: rotate(90deg); color: var(--purple); }
         .cate-group { display: none; padding-left: 15px; border-left: 2px solid var(--h-blue); margin-left: 12px; min-height: 5px; }
         .cate-group.open { display: block; }
-        .sortable-ghost { opacity: 0.4; background-color: #f0f0f0; border-radius: 8px; }
 
+        /* Search Bar & Popover */
         .hero { background: var(--h-blue); padding: 75px 15px 25px; }
         .search-container { background: white; border-radius: 25px; display: flex; align-items: center; padding: 5px 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: relative; }
         .search-container input { border: none; flex: 1; padding: 10px; outline: none; font-size: 14px; background: transparent; }
         .date-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; }
         .date-popover { position: absolute; top: 55px; right: 0; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: none; z-index: 100; width: 240px; box-sizing: border-box; }
         .date-popover.active { display: block; }
-        .date-popover input { width: 100%; box-sizing: border-box; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; background-color: #fafafa; -webkit-appearance: none; min-height: 40px; }
 
+        /* Carousel & Grid */
         .carousel { width: 100%; aspect-ratio: 16/10; background: #fff; border-radius: 12px; overflow: hidden; position: relative; margin-top: 15px; }
         .carousel-img { width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0; transition: 0.5s; cursor: pointer; }
         .carousel-img.active { opacity: 1; z-index: 10; }
@@ -47,31 +57,29 @@
         .card { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; }
         .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         
+        /* Intro Section */
         .intro-section { background-color: var(--bg-cream); padding: 40px 20px 60px; text-align: center; margin-top: 10px; overflow: hidden; }
         .intro-title { color: var(--brown); font-size: 24px; font-weight: bold; margin-bottom: 5px; }
-        .scrolling-wrapper { width: 100%; }
         .scrolling-track { display: flex; gap: 15px; animation: scroll 25s linear infinite; width: max-content; }
-        .scrolling-track img { width: 130px; height: 130px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
+        .scrolling-track img { width: 130px; height: 130px; border-radius: 12px; object-fit: cover; }
         @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         
-        .fab-group { position: fixed; bottom: 30px; right: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 1500; }
-        .fab { width: 60px; height: 60px; background: var(--purple); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: center; align-items: center; }
-        .fab.export-btn { background: #4caf50; font-size: 24px; width: 45px; height: 45px; }
-        .fab.import-btn { background: #ff9800; font-size: 24px; width: 45px; height: 45px; }
-
+        /* Floating Button & Modals */
+        .fab { position: fixed; bottom: 30px; right: 20px; width: 60px; height: 60px; background: var(--purple); color: white; border-radius: 50%; border: none; font-size: 30px; z-index: 1500; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; display:none; }
         .overlay.active { display:block; }
         
         .modal { position: fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; width:90%; max-height:85%; border-radius:20px; z-index:4000; display:none; padding:20px; overflow-y:auto; box-sizing: border-box; }
         .modal.active { display:block; }
-        input[type="text"], input[type="date"], select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #eee; border-radius: 8px; box-sizing: border-box; background:#fafafa; -webkit-appearance: none; }
         .btn-main { width: 100%; padding: 15px; background: var(--purple); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
-        .edit-preview-container { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 10px; }
-        .edit-preview-box { position: relative; flex-shrink: 0; }
-        .edit-preview-box img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc; }
-        .edit-preview-box .del-btn { position: absolute; top: -5px; right: -5px; background: #ff4444; color: white; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 20px; font-size: 14px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-
+        /* Image Edit Grid */
+        .img-edit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
+        .img-edit-item { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; background: #eee; height: 90px; }
+        .img-edit-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .img-del-btn { position: absolute; top: 0; right: 0; background: rgba(255,0,0,0.8); color: white; border: none; padding: 4px 8px; font-size: 12px; cursor: pointer; border-bottom-left-radius: 8px; }
+        
+        /* 詳情頁圖片顯示器 */
         .h-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0; background: #fff; border-radius: 12px; overflow-y: hidden; }
         .h-scroll img { flex: 0 0 100%; width: 100%; max-height: 450px; object-fit: contain; scroll-snap-align: center; cursor: pointer; display: block; }
         .h-scroll::-webkit-scrollbar { display: none; }
@@ -91,13 +99,13 @@
     </div>
 
     <div class="sidebar" id="sb">
-        <h2 style="color:var(--purple); margin-top:0;">分類目錄</h2>
-        <div id="menuContent">讀取中...</div>
+        <h2 style="color:var(--purple); margin-top:0; font-size: 18px;">分類目錄 (長按拖曳排序)</h2>
+        <div id="menuContent"></div>
         <div style="margin-top:25px; padding:15px; background:#f4f4f4; border-radius:10px;">
             <p style="font-size:13px; color:#666; font-weight:bold; margin-top:0;">➕ 新增分類</p>
-            <input type="text" id="newMain" placeholder="大分類 (必填)">
-            <input type="text" id="newSub" placeholder="中分類 (選填)">
-            <input type="text" id="newSubSub" placeholder="小分類 (選填)">
+            <input type="text" id="newMain" placeholder="大分類 (必填, 例: 鬆弛熊)">
+            <input type="text" id="newSub" placeholder="中分類 (選填, 例: 2026)">
+            <input type="text" id="newSubSub" placeholder="小分類 (選填, 例: 4月)">
             <button onclick="addCate()" style="width:100%; padding:10px; background:var(--purple); color:white; border:none; border-radius:8px; margin-top:5px; cursor:pointer;">建立新分類</button>
         </div>
         <button onclick="toggleSidebar(false)" style="margin-top:20px; width:100%; padding:12px; background:#e0e0e0; border:none; border-radius:10px; color:#333; cursor:pointer;">關閉</button>
@@ -118,18 +126,18 @@
             <div class="date-popover" id="datePop">
                 <input type="month" id="sStart" onchange="doSearch()">
                 <input type="month" id="sEnd" onchange="doSearch()">
-                <button onclick="toggleDatePopover()" style="width:100%; background:var(--h-blue); border:none; border-radius:8px; padding:10px; color:white; font-weight:bold;">完成</button>
+                <button onclick="toggleDatePopover()" style="width:100%; margin-top:10px; background:var(--h-blue); border:none; border-radius:5px; padding:8px; color:white;">完成</button>
             </div>
         </div>
         <div class="carousel" id="cp"></div>
     </div>
 
     <h3 style="padding: 0 15px; color: var(--purple); margin-bottom: 0;">全部收藏</h3>
-    <div id="grid" class="grid">資料載入中...</div>
+    <div id="grid" class="grid"></div>
 
     <div class="intro-section">
         <div class="intro-title">Rilakkuma™</div>
-        <div class="intro-subtitle">2003年9月登場</div>
+        <div style="font-size:14px; margin-bottom:15px; color:#666;">2003年9月登場</div>
         <div class="intro-text">
             リラックマはいつもごゆるり<br>
             マイペースな着ぐるみのクマ。<br>
@@ -139,18 +147,10 @@
             チャイロイコグマや<br>
             そのお友達と仲良し。
         </div>
-        <div class="scrolling-wrapper">
-            <div class="scrolling-track" id="st"></div>
-        </div>
+        <div class="scrolling-track" id="st"></div>
     </div>
 
-    <div class="fab-group">
-        <button class="fab import-btn" onclick="document.getElementById('importFile').click()" title="匯入/恢復備份">📂</button>
-        <button class="fab export-btn" onclick="exportData()" title="匯出/下載備份">💾</button>
-        <button class="fab" onclick="openAdd()">+</button>
-    </div>
-    
-    <input type="file" id="importFile" style="display:none" onchange="importData(event)" accept=".json">
+    <button class="fab" onclick="openAdd()">+</button>
 
     <div class="modal" id="addM">
         <h2 id="modalTitle" style="margin-top:0;">➕ 加入收藏</h2>
@@ -165,14 +165,16 @@
             <select id="selL3"></select>
         </div>
 
-        <textarea id="desc" placeholder="詳情描述 (輸入網址會變連結)" rows="3"></textarea>
+        <textarea id="desc" placeholder="詳情描述 (輸入網址會自動變成連結)" rows="3"></textarea>
         
-        <p style="font-size:12px; color:#666; margin:15px 0 5px 0;">上傳圖片 / PDF (可多選)</p>
-        <input type="file" id="imgs" accept="image/*, application/pdf" multiple onchange="handleFileUpload(event)">
-        
-        <div id="editPreviewContainer" class="edit-preview-container"></div>
-        
-        <input type="text" id="vid" placeholder="YouTube 網址/Shorts">
+        <div style="margin-top: 10px;">
+            <p style="font-size:12px; color:#666; margin:0 0 5px 0;">圖片/PDF管理 (長按可排序，點✕刪除)</p>
+            <div id="imgEditList" class="img-edit-grid"></div>
+            <input type="file" id="imgs" accept="image/*,application/pdf" multiple style="background:#fff; border:1px dashed #ccc;">
+            <div id="loadingStatus" style="color:var(--h-blue); font-size:12px; display:none; margin-top:5px;">⏳ 檔案處理中，請稍候...</div>
+        </div>
+
+        <input type="text" id="vid" placeholder="YouTube 網址/Shorts" style="margin-top:10px;">
         <button onclick="save()" id="saveBtn" class="btn-main" style="margin-top:15px;">儲存收藏</button>
         <button onclick="closeAll()" style="width:100%; background:none; border:none; color:#999; padding:15px; margin-top:5px; cursor:pointer;">取消</button>
     </div>
@@ -184,13 +186,16 @@
     </div>
 
     <script>
-        try { if (typeof pdfjsLib !== 'undefined') pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js'; } catch(e) {}
+        // PDF.js Worker 設定
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         const DB_NAME = "BearMuseumDB";
         const STORE_NAME = "ItemsStore";
         const CATE_STORE = "CateStore";
+        
         let db, items = [], cates = { "一般類別": { "公仔": [], "文具": [] }, "鬆弛熊": { "限定": [] } };
-        let tempImgs = [];
+        let editingImgs = []; // 暫存編輯中的圖片陣列
+        let sortableImgsInstance = null; // Sortable 實例
 
         const request = indexedDB.open(DB_NAME, 2);
         request.onupgradeneeded = e => {
@@ -199,79 +204,47 @@
             if (!db.objectStoreNames.contains(CATE_STORE)) db.createObjectStore(CATE_STORE, { keyPath: "id" });
         };
         request.onsuccess = e => { db = e.target.result; loadAll(); };
-        request.onerror = e => { renderEmergencyError("無法連接資料庫，可能是手機儲存空間不足或開啟了無痕模式。"); };
-
-        /* ================= 系統急救錯誤處理 ================= */
-        function renderEmergencyError(errorMsg) {
-            document.getElementById('grid').innerHTML = `
-                <div style="grid-column: span 2; text-align:center; padding: 30px 20px; background:#ffebeb; border-radius:12px; border: 1px solid #ffcccc;">
-                    <h3 style="color:#d32f2f; margin-top:0;">⚠️ 資料庫讀取卡死</h3>
-                    <p style="font-size:14px; color:#555; text-align:left;">原因：之前的圖片數據過大，導致手機瀏覽器記憶體崩潰鎖死。</p>
-                    <p style="font-size:12px; color:#888; text-align:left; word-break:break-all;">系統代碼: ${errorMsg}</p>
-                    <button onclick="forceResetDB()" style="padding:15px; background:#d32f2f; color:white; border:none; border-radius:8px; margin-top:15px; cursor:pointer; width:100%; font-weight:bold; font-size:16px;">🚨 強制清除卡死狀態</button>
-                    <p style="font-size:12px; color:#d32f2f; margin-top:10px;">(注意：此動作會清空異常的資料庫，重置後請重新匯入備份檔)</p>
-                </div>`;
-        }
-
-        function forceResetDB() {
-            if(confirm("即將強制重置資料庫來解除卡死狀態！\n確定要重置嗎？")) {
-                const req = indexedDB.deleteDatabase(DB_NAME);
-                req.onsuccess = () => { alert("解除卡死成功！網頁即將重新整理。"); location.reload(); };
-                req.onerror = () => { alert("強制重置失敗，請嘗試手動到手機設定清除 Safari/Chrome 的網站資料。"); };
-            }
-        }
 
         async function loadAll() {
-            try {
-                if (!db) throw new Error("資料庫實體不存在");
-                const tx = db.transaction([STORE_NAME, CATE_STORE], "readonly");
-                
-                tx.onerror = (e) => { throw new Error(e.target.error); };
-
-                items = await new Promise((res, rej) => {
-                    const req = tx.objectStore(STORE_NAME).getAll();
-                    req.onsuccess = () => {
-                        let resultItems = req.result || [];
-                        resultItems.sort((a, b) => {
-                            const dateA = a.date || "0000-00-00";
-                            const dateB = b.date || "0000-00-00";
-                            if (dateA !== dateB) return dateB.localeCompare(dateA);
-                            return b.id - a.id;
-                        });
-                        res(resultItems);
-                    };
-                    req.onerror = (e) => rej(e.target.error);
-                });
-                
-                const cateRes = await new Promise((res, rej) => {
-                    const req = tx.objectStore(CATE_STORE).get("main_cates");
-                    req.onsuccess = () => res(req.result);
-                    req.onerror = (e) => rej(e.target.error);
-                });
-                
-                if (cateRes && cateRes.data) {
-                    let loaded = cateRes.data;
-                    for (let m in loaded) {
-                        if (Array.isArray(loaded[m])) {
-                            let tempObj = {};
-                            loaded[m].forEach(s => tempObj[s] = []);
-                            loaded[m] = tempObj;
-                        }
+            const tx = db.transaction([STORE_NAME, CATE_STORE], "readonly");
+            items = await new Promise(res => {
+                const req = tx.objectStore(STORE_NAME).getAll();
+                req.onsuccess = () => {
+                    let resultItems = req.result;
+                    resultItems.sort((a, b) => {
+                        const dateA = a.date || "0000-00-00";
+                        const dateB = b.date || "0000-00-00";
+                        if (dateA !== dateB) return dateB.localeCompare(dateA);
+                        return b.id - a.id;
+                    });
+                    res(resultItems);
+                };
+            });
+            const cateRes = await new Promise(res => {
+                const req = tx.objectStore(CATE_STORE).get("main_cates");
+                req.onsuccess = () => res(req.result);
+            });
+            
+            if (cateRes && cateRes.data) {
+                let loaded = cateRes.data;
+                for (let m in loaded) {
+                    if (Array.isArray(loaded[m])) {
+                        let tempObj = {};
+                        loaded[m].forEach(s => tempObj[s] = []);
+                        loaded[m] = tempObj;
                     }
-                    cates = loaded;
                 }
-                
-                render(items); 
-                renderMenu(); popL1(); startCarousel();
-                
-            } catch (err) {
-                console.error("載入失敗:", err);
-                renderEmergencyError(err.message);
+                cates = loaded;
             }
+            renderMenu(); popL1(); render(); startCarousel();
         }
 
-        /* ------------------ 目錄與拖曳排序 ------------------ */
-        function toggleFolder(el, targetId) { el.classList.toggle('open'); document.getElementById(targetId).classList.toggle('open'); }
+        /* ------------------ 目錄編輯與排序 (Sortable) ------------------ */
+        function toggleFolder(el, targetId) {
+            el.classList.toggle('open');
+            document.getElementById(targetId).classList.toggle('open');
+        }
+
         function filterCate(c) {
             if(c === 'all') render(items);
             else render(items.filter(x => x.cate === c || (x.cate && x.cate.startsWith(c + '-'))));
@@ -279,214 +252,243 @@
         }
 
         function renderMenu() {
-            let html = `<div class="cate-row"><span class="cate-name" onclick="filterCate('all')">📚 顯示全部</span></div>`;
-            html += `<div id="sortable-main">`;
+            let html = `<div class="cate-row" style="background:#f9f9f9;"><span class="cate-name" onclick="filterCate('all')">📚 顯示全部</span></div>`;
+            
             for(let m in cates) {
+                let mId = `m_${m.replace(/\s/g,'_')}`;
                 let hasSub = Object.keys(cates[m]).length > 0;
-                let folderId = `f-m-${m.replace(/\s+/g, '')}`;
-                html += `<div class="main-item drag-handle" data-main="${m}">
+                
+                html += `<div class="cate-node main-node" data-name="${m}">
                     <div class="cate-row">
-                        <span class="toggle-btn" style="visibility:${hasSub?'visible':'hidden'}" onclick="toggleFolder(this, '${folderId}')">▶</span>
+                        <span class="toggle-btn" style="visibility:${hasSub?'visible':'hidden'}" onclick="toggleFolder(this, '${mId}')">▶</span>
                         <span class="cate-name" onclick="filterCate('${m}')">${m}</span>
-                        <span class="del-x" onclick="delCate(event, '${m}')">✕</span>
-                    </div><div id="${folderId}" class="cate-group sortable-sub" style="margin-bottom:10px;">`; 
+                        <div class="action-btns">
+                            <span class="btn-icon" onclick="editCateName(event, '${m}')">✏️</span>
+                            <span class="btn-icon" onclick="delCate(event, '${m}')">✕</span>
+                        </div>
+                    </div>
+                    <div id="${mId}" class="cate-group sub-container" data-parent="${m}">`;
+                
                 for(let s in cates[m]) {
+                    let sId = `${mId}_s_${s.replace(/\s/g,'_')}`;
                     let hasSubSub = cates[m][s].length > 0;
-                    let subFolderId = `f-s-${m.replace(/\s+/g, '')}-${s.replace(/\s+/g, '')}`;
-                    html += `<div class="sub-item drag-handle" data-sub="${s}">
+                    
+                    html += `<div class="cate-node sub-node" data-name="${s}">
                         <div class="cate-row" style="padding: 8px 0;">
-                            <span class="toggle-btn" style="visibility:${hasSubSub?'visible':'hidden'}" onclick="toggleFolder(this, '${subFolderId}')">▶</span>
+                            <span class="toggle-btn" style="visibility:${hasSubSub?'visible':'hidden'}" onclick="toggleFolder(this, '${sId}')">▶</span>
                             <span class="cate-name sub" onclick="filterCate('${m}-${s}')">${s}</span>
-                            <span class="del-x" onclick="delCate(event, '${m}', '${s}')">✕</span>
-                        </div><div id="${subFolderId}" class="cate-group sortable-subsub">`;
+                            <div class="action-btns">
+                                <span class="btn-icon" onclick="editCateName(event, '${m}', '${s}')">✏️</span>
+                                <span class="btn-icon" onclick="delCate(event, '${m}', '${s}')">✕</span>
+                            </div>
+                        </div>
+                        <div id="${sId}" class="cate-group subsub-container" data-parent="${m}-${s}">`;
+                    
                     cates[m][s].forEach(ss => {
-                        html += `<div class="subsub-item drag-handle" data-subsub="${ss}">
+                        html += `<div class="cate-node subsub-node" data-name="${ss}">
                             <div class="cate-row" style="padding: 6px 0;">
                                 <span class="cate-name subsub" style="margin-left:24px;" onclick="filterCate('${m}-${s}-${ss}')">• ${ss}</span>
-                                <span class="del-x" onclick="delCate(event, '${m}', '${s}', '${ss}')">✕</span>
-                            </div></div>`;
+                                <div class="action-btns">
+                                    <span class="btn-icon" onclick="editCateName(event, '${m}', '${s}', '${ss}')">✏️</span>
+                                    <span class="btn-icon" onclick="delCate(event, '${m}', '${s}', '${ss}')">✕</span>
+                                </div>
+                            </div>
+                        </div>`;
                     });
                     html += `</div></div>`;
                 }
                 html += `</div></div>`;
             }
-            html += `</div>`;
             document.getElementById('menuContent').innerHTML = html;
-            if (typeof Sortable !== 'undefined') initSortable();
+            initMenuSortable();
         }
 
-        function initSortable() {
-            const commonOpts = { delay: 250, delayOnTouchOnly: true, animation: 150, handle: '.drag-handle', onEnd: saveMenuOrder };
-            new Sortable(document.getElementById('sortable-main'), { ...commonOpts, group: 'main' });
-            document.querySelectorAll('.sortable-sub').forEach(el => new Sortable(el, { ...commonOpts, group: 'sub' }));
-            document.querySelectorAll('.sortable-subsub').forEach(el => new Sortable(el, { ...commonOpts, group: 'subsub' }));
-        }
-
-        function saveMenuOrder() {
-            let newCates = {};
-            document.querySelectorAll('.main-item').forEach(mEl => {
-                let mName = mEl.getAttribute('data-main'); if(!mName) return;
-                newCates[mName] = {};
-                let subGroup = mEl.querySelector(':scope > .sortable-sub');
-                if (subGroup) {
-                    subGroup.querySelectorAll(':scope > .sub-item').forEach(sEl => {
-                        let sName = sEl.getAttribute('data-sub'); if(!sName) return;
-                        newCates[mName][sName] = [];
-                        let subsubGroup = sEl.querySelector(':scope > .sortable-subsub');
-                        if (subsubGroup) {
-                            subsubGroup.querySelectorAll(':scope > .subsub-item').forEach(ssEl => {
-                                let ssName = ssEl.getAttribute('data-subsub');
-                                if(ssName) newCates[mName][sName].push(ssName);
-                            });
-                        }
-                    });
-                }
+        // 初始化目錄拖曳
+        function initMenuSortable() {
+            const commonOpt = {
+                animation: 150, delay: 250, delayOnTouchOnly: true, // 手機長按250ms才拖曳
+                onEnd: () => rebuildCatesFromDOM()
+            };
+            
+            Sortable.create(document.getElementById('menuContent'), { ...commonOpt, group: 'main' });
+            
+            document.querySelectorAll('.sub-container').forEach(el => {
+                Sortable.create(el, { ...commonOpt, group: 'sub' });
             });
-            cates = newCates; saveCates().then(() => popL1());
+            document.querySelectorAll('.subsub-container').forEach(el => {
+                Sortable.create(el, { ...commonOpt, group: 'subsub' });
+            });
+        }
+
+        // 從 DOM 重新建構分類資料以儲存排序
+        function rebuildCatesFromDOM() {
+            let newCates = {};
+            document.querySelectorAll('#menuContent > .main-node').forEach(mNode => {
+                let mName = mNode.dataset.name;
+                newCates[mName] = {};
+                
+                mNode.querySelectorAll(':scope > .sub-container > .sub-node').forEach(sNode => {
+                    let sName = sNode.dataset.name;
+                    newCates[mName][sName] = [];
+                    
+                    sNode.querySelectorAll(':scope > .subsub-container > .subsub-node').forEach(ssNode => {
+                        newCates[mName][sName].push(ssNode.dataset.name);
+                    });
+                });
+            });
+            cates = newCates;
+            saveCates();
+        }
+
+        // 編輯分類名稱並同步所有關聯物品
+        async function editCateName(e, m, s=null, ss=null) {
+            e.stopPropagation();
+            let oldName = ss ? ss : (s ? s : m);
+            let newName = prompt("請輸入新的分類名稱：", oldName);
+            if(!newName || newName.trim() === "" || newName === oldName) return;
+            newName = newName.trim();
+            
+            // 1. 更新資料庫中的分類標籤
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            const store = tx.objectStore(STORE_NAME);
+            const req = store.getAll();
+            req.onsuccess = () => {
+                req.result.forEach(item => {
+                    if(!item.cate) return;
+                    let p = item.cate.split('-');
+                    let changed = false;
+                    if(ss && p[0]===m && p[1]===s && p[2]===oldName) { p[2] = newName; changed = true; }
+                    else if(!ss && s && p[0]===m && p[1]===oldName) { p[1] = newName; changed = true; }
+                    else if(!ss && !s && p[0]===oldName) { p[0] = newName; changed = true; }
+                    
+                    if(changed) { item.cate = p.join('-'); store.put(item); }
+                });
+            };
+
+            // 2. 更新目錄結構
+            if(ss) {
+                let idx = cates[m][s].indexOf(oldName);
+                if(idx > -1) cates[m][s][idx] = newName;
+            } else if(s) {
+                cates[m][newName] = cates[m][oldName];
+                delete cates[m][oldName];
+            } else {
+                cates[newName] = cates[oldName];
+                delete cates[oldName];
+            }
+            
+            await saveCates();
+            loadAll(); // 重新整理顯示
         }
 
         async function saveCates() {
-            try {
-                const tx = db.transaction(CATE_STORE, "readwrite");
-                tx.objectStore(CATE_STORE).put({ id: "main_cates", data: cates });
-            } catch (err) {
-                alert("儲存分類失敗，資料庫可能異常：" + err.message);
-            }
+            const tx = db.transaction(CATE_STORE, "readwrite");
+            tx.objectStore(CATE_STORE).put({ id: "main_cates", data: cates });
         }
 
-        /* 修復：為刪除加入 try-catch 防止靜默失敗 */
         function delCate(e, m, s=null, ss=null) {
-            e.stopPropagation(); let name = ss ? ss : (s ? s : m);
-            if(!confirm(`確定刪除分類「${name}」？`)) return;
-            if (ss) cates[m][s] = cates[m][s].filter(x => x !== ss);
-            else if (s) delete cates[m][s]; else delete cates[m];
+            e.stopPropagation();
+            let name = ss ? ss : (s ? s : m);
+            if(!confirm(`確定刪除分類「${name}」？\n(注意：原屬於此分類的物品不會被刪除，但會失去分類標籤)`)) return;
             
-            try {
-                saveCates().then(() => loadAll());
-            } catch (err) {
-                alert("無法刪除！資料庫異常，請嘗試重新整理或重置。\n錯誤：" + err.message);
-            }
+            if (ss) cates[m][s] = cates[m][s].filter(x => x !== ss);
+            else if (s) delete cates[m][s];
+            else delete cates[m];
+            
+            saveCates().then(() => loadAll());
         }
 
         function addCate() {
             let m = document.getElementById('newMain').value.trim();
             let s = document.getElementById('newSub').value.trim();
             let ss = document.getElementById('newSubSub').value.trim();
+            
             if(!m) return alert("請至少填寫「大分類」！");
             if(!cates[m]) cates[m] = {};
             if(s && !cates[m][s]) cates[m][s] = [];
             if(s && ss && !cates[m][s].includes(ss)) cates[m][s].push(ss);
             
-            try {
-                saveCates().then(() => { loadAll(); document.getElementById('newMain').value = ""; document.getElementById('newSub').value = ""; document.getElementById('newSubSub').value = ""; });
-            } catch (err) {
-                alert("無法新增分類：" + err.message);
-            }
+            saveCates().then(() => {
+                loadAll();
+                document.getElementById('newMain').value = ""; 
+                document.getElementById('newSub').value = ""; 
+                document.getElementById('newSubSub').value = "";
+            });
         }
 
-        /* ------------------ 備份匯出匯入 ------------------ */
-        async function exportData() {
-            try {
-                if(!db) throw new Error("資料庫未連接");
-                const tx = db.transaction([STORE_NAME, CATE_STORE], "readonly");
-                
-                const itemsData = await new Promise((res, rej) => {
-                    const req = tx.objectStore(STORE_NAME).getAll();
-                    req.onsuccess = () => res(req.result);
-                    req.onerror = () => rej(new Error("讀取項目失敗"));
-                });
-                const catesData = await new Promise((res, rej) => {
-                    const req = tx.objectStore(CATE_STORE).get("main_cates");
-                    req.onsuccess = () => res(req.result);
-                    req.onerror = () => rej(new Error("讀取分類失敗"));
-                });
-
-                const backupData = { version: "v8.6.3", date: new Date().toISOString(), items: itemsData, cates: catesData ? catesData.data : null };
-                const blob = new Blob([JSON.stringify(backupData)], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url; a.download = `鬆弛熊圖鑑備份_${new Date().toLocaleDateString()}.json`;
-                a.click();
-            } catch(e) {
-                alert(`匯出失敗！\n可能是因為資料庫處於卡死狀態。\n\n如果一直卡住，請重新整理頁面使用「強制重置」。`);
-            }
-        }
-
-        function importData(e) {
-            const file = e.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                try {
-                    const data = JSON.parse(event.target.result);
-                    if (!confirm(`找到 ${data.items.length} 筆備份資料！\n是否要匯入？`)) return;
-                    const tx = db.transaction([STORE_NAME, CATE_STORE], "readwrite");
-                    data.items.forEach(item => tx.objectStore(STORE_NAME).put(item));
-                    if (data.cates) tx.objectStore(CATE_STORE).put({ id: "main_cates", data: data.cates });
-                    tx.oncomplete = () => { alert("🎉 恢復成功！"); location.reload(); };
-                } catch (err) { alert("匯入失敗，備份檔可能已損毀。"); }
-            };
-            reader.readAsText(file); e.target.value = "";
-        }
-
-        /* ------------------ 選單聯動與圖片處理 ------------------ */
-        function popL1() {
-            let s = `<option value="">-- 主分類 (必選) --</option>`;
-            for(let m in cates) s += `<option value="${m}">${m}</option>`;
-            document.getElementById('selL1').innerHTML = s; popL2();
-        }
-        function popL2() {
-            let m = document.getElementById('selL1').value; let s = `<option value="">-- 中分類 (選填) --</option>`;
-            if(m && cates[m]) for(let sub in cates[m]) s += `<option value="${sub}">${sub}</option>`;
-            document.getElementById('selL2').innerHTML = s; popL3();
-        }
-        function popL3() {
-            let m = document.getElementById('selL1').value; let sub = document.getElementById('selL2').value;
-            let s = `<option value="">-- 小分類 (選填) --</option>`;
-            if(m && sub && cates[m] && cates[m][sub]) cates[m][sub].forEach(ss => s += `<option value="${ss}">${ss}</option>`);
-            document.getElementById('selL3').innerHTML = s;
-        }
-
-        /* 修復：加強極限壓縮，降低 OOM 風險 */
-        async function handleFileUpload(e) {
-            const files = e.target.files; if(!files.length) return;
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "極限壓縮中..."; btn.disabled = true;
+        /* ------------------ 圖片/PDF 引擎 (極致壓縮 & 陣列管理) ------------------ */
+        
+        // 渲染編輯中的圖片列表
+        function renderEditImgs() {
+            const container = document.getElementById('imgEditList');
+            container.innerHTML = editingImgs.map((src, i) => `
+                <div class="img-edit-item" data-index="${i}">
+                    <img src="${src}">
+                    <button class="img-del-btn" onclick="delEditImg(${i})">✕</button>
+                </div>
+            `).join('');
             
-            for(let file of files) {
-                if(file.size > 10 * 1024 * 1024) { alert("⚠️ 警告：單個檔案超過 10MB，儲存時可能會導致瀏覽器崩潰，建議縮小後再上傳！"); }
-                if(file.type === 'application/pdf') {
-                    if (typeof pdfjsLib === 'undefined') { alert("無法轉換 PDF。"); continue; }
-                    try {
-                        const arrayBuffer = await file.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-                        for(let i = 1; i <= pdf.numPages; i++) {
-                            const page = await pdf.getPage(i); 
-                            // 修復：將 PDF 解析放大倍率從 1.5 降為 1.0，大幅減少記憶體佔用
-                            const viewport = page.getViewport({scale: 1.0}); 
-                            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-                            canvas.width = viewport.width; canvas.height = viewport.height;
-                            await page.render({canvasContext: ctx, viewport: viewport}).promise;
-                            tempImgs.push(canvas.toDataURL('image/jpeg', 0.6)); // 修復：降低品質至 0.6
-                        }
-                    } catch (err) { alert("PDF 讀取失敗！"); }
-                } else if (file.type.startsWith('image/')) {
-                    tempImgs.push(await compressImage(file));
+            if(!sortableImgsInstance) {
+                sortableImgsInstance = Sortable.create(container, {
+                    animation: 150, delay: 200, delayOnTouchOnly: true, // 長按拖曳
+                    onEnd: (evt) => {
+                        // 更新陣列排序
+                        const itemEl = editingImgs.splice(evt.oldIndex, 1)[0];
+                        editingImgs.splice(evt.newIndex, 0, itemEl);
+                        renderEditImgs();
+                    }
+                });
+            }
+        }
+
+        function delEditImg(idx) {
+            editingImgs.splice(idx, 1);
+            renderEditImgs();
+        }
+
+        // 監聽文件選擇 (支援圖片與 PDF)
+        document.getElementById('imgs').addEventListener('change', async function() {
+            if(this.files.length === 0) return;
+            const status = document.getElementById('loadingStatus');
+            const btn = document.getElementById('saveBtn');
+            status.style.display = 'block'; btn.disabled = true;
+
+            for(let f of this.files) {
+                if(f.type === 'application/pdf') {
+                    await processPDF(f);
+                } else {
+                    let b64 = await compressImage(f);
+                    editingImgs.push(b64);
                 }
             }
-            renderEditPreview();
-            btn.innerText = "儲存收藏"; btn.disabled = false; e.target.value = "";
+            
+            renderEditImgs();
+            this.value = ""; // 清空 input 以便重複選擇
+            status.style.display = 'none'; btn.disabled = false;
+        });
+
+        // 處理 PDF 轉圖片
+        async function processPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            
+            for(let i=1; i<=pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({scale: 1.5}); // 品質與大小的平衡
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = viewport.width; canvas.height = viewport.height;
+                
+                await page.render({canvasContext: ctx, viewport: viewport}).promise;
+                
+                // 轉為 WebP 極致壓縮
+                let dataUrl = compressCanvas(canvas, 800);
+                editingImgs.push(dataUrl);
+            }
         }
 
-        function renderEditPreview() {
-            let html = "";
-            tempImgs.forEach((img, idx) => { html += `<div class="edit-preview-box"><img src="${img}"><div class="del-btn" onclick="removeTempImg(${idx})">×</div></div>`; });
-            document.getElementById('editPreviewContainer').innerHTML = html;
-        }
-
-        function removeTempImg(idx) { tempImgs.splice(idx, 1); renderEditPreview(); }
-
-        /* 修復：極限壓縮邏輯，最大寬度降為 800，品質降為 0.6 */
-        function compressImage(file, maxDim = 800) {
+        // 壓縮圖片引擎 (WebP, max: 800px, quality: 0.5) 專為極大容量設計
+        function compressImage(file) {
             return new Promise(res => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = e => {
@@ -494,88 +496,128 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         let w = img.width, h = img.height;
-                        if (w > h) { if(w > maxDim){ h *= maxDim/w; w = maxDim; } } else { if(h > maxDim){ w *= maxDim/h; h = maxDim; } }
+                        const maxDim = 800; // 壓縮至不崩潰程度
+                        if (w > h) { if(w > maxDim){ h *= maxDim/w; w = maxDim; } }
+                        else { if(h > maxDim){ w *= maxDim/h; h = maxDim; } }
                         canvas.width = w; canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        res(canvas.toDataURL('image/jpeg', 0.6));
+                        res(compressCanvas(canvas, maxDim));
                     };
                 };
             });
         }
 
-        async function save() {
-            const btn = document.getElementById('saveBtn'); btn.innerText = "儲存中..."; btn.disabled = true;
-            try {
-                let cateString = [document.getElementById('selL1').value, document.getElementById('selL2').value, document.getElementById('selL3').value].filter(Boolean).join('-');
-                const data = {
-                    id: document.getElementById('editId').value ? parseInt(document.getElementById('editId').value) : Date.now(),
-                    name: document.getElementById('n').value, date: document.getElementById('dt').value,
-                    cate: cateString || "未分類", desc: document.getElementById('desc').value, vid: document.getElementById('vid').value,
-                    imgs: [...tempImgs]
-                };
-                
-                // 修復：體積警報機制，避免直接寫爆
-                let payloadSize = JSON.stringify(data).length;
-                if(payloadSize > 5000000) { // 大於 5MB
-                    alert("⚠️ 注意：這次儲存的圖片資料量極大！\n系統會嘗試儲存，但如果稍後發生當機或白屏，請減少圖片數量。");
-                }
-                
-                const tx = db.transaction(STORE_NAME, "readwrite");
-                
-                tx.onerror = (e) => {
-                    alert("❌ 儲存失敗！\n手機記憶體無法承受這麼大的圖片檔案，資料庫連線已中斷。\n請重新整理頁面後，減少圖片數量再試一次。");
-                    btn.innerText = "儲存收藏"; btn.disabled = false;
-                };
-
-                tx.objectStore(STORE_NAME).put(data);
-                tx.oncomplete = () => {
-                    alert("✅ 儲存成功！");
-                    location.reload();
-                };
-            } catch(err) {
-                alert("未預期錯誤: " + err.message); btn.innerText = "儲存收藏"; btn.disabled = false;
-            }
+        function compressCanvas(canvas, maxDim) {
+            // WebP 格式壓縮率極高，0.5 品質可大幅減少體積
+            return canvas.toDataURL('image/webp', 0.5); 
         }
 
-        /* ------------------ 渲染顯示 (加入防壞圖保護) ------------------ */
-        function getSafeImg(x) { return (x && x.imgs && x.imgs.length > 0 && x.imgs[0]) ? x.imgs[0] : ''; }
+        /* ------------------ 聯動式資料輸入選單 ------------------ */
+        function popL1() {
+            let s = `<option value="">-- 主分類 (必選) --</option>`;
+            for(let m in cates) s += `<option value="${m}">${m}</option>`;
+            document.getElementById('selL1').innerHTML = s;
+            popL2();
+        }
+        function popL2() {
+            let m = document.getElementById('selL1').value;
+            let s = `<option value="">-- 中分類 (選填) --</option>`;
+            if(m && cates[m]) {
+                for(let sub in cates[m]) s += `<option value="${sub}">${sub}</option>`;
+            }
+            document.getElementById('selL2').innerHTML = s;
+            popL3();
+        }
+        function popL3() {
+            let m = document.getElementById('selL1').value;
+            let sub = document.getElementById('selL2').value;
+            let s = `<option value="">-- 小分類 (選填) --</option>`;
+            if(m && sub && cates[m] && cates[m][sub]) {
+                cates[m][sub].forEach(ss => s += `<option value="${ss}">${ss}</option>`);
+            }
+            document.getElementById('selL3').innerHTML = s;
+        }
+
+        /* ------------------ 核心功能 ------------------ */
+        async function save() {
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = "儲存中..."; btn.disabled = true;
+            
+            const id = document.getElementById('editId').value;
+            let l1 = document.getElementById('selL1').value;
+            let l2 = document.getElementById('selL2').value;
+            let l3 = document.getElementById('selL3').value;
+            let cateString = [l1, l2, l3].filter(Boolean).join('-');
+            if (!cateString) cateString = "未分類";
+
+            // 直接存入 editingImgs 陣列（已包含舊圖片、新圖片以及最新排序）
+            const data = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('n').value,
+                date: document.getElementById('dt').value,
+                cate: cateString,
+                desc: document.getElementById('desc').value,
+                vid: document.getElementById('vid').value,
+                imgs: [...editingImgs] 
+            };
+            
+            const tx = db.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).put(data);
+            tx.oncomplete = () => location.reload();
+        }
 
         function render(list = items) {
-            document.getElementById('grid').innerHTML = list.length === 0 ? `<div style="grid-column: span 2; text-align:center; padding: 40px 0; color:#888;">空空如也</div>` : 
-            list.map(x => `<div class="card" onclick="openDetail(${x.id})"><img src="${getSafeImg(x)}"><div style="padding:10px; font-size:13px; font-weight:bold;">${x.name || '未命名'}</div></div>`).join('');
+            document.getElementById('grid').innerHTML = list.length === 0 ? `<div style="grid-column: span 2; text-align:center; padding: 40px 0; color:#999;">空空如也</div>` : 
+            list.map(x => `<div class="card" onclick="openDetail(${x.id})"><img src="${x.imgs[0] || ''}"><div style="padding:10px; font-size:13px; font-weight:bold;">${x.name}</div></div>`).join('');
             
             if(items.length > 0) {
                 const top5 = items.slice(0, 5);
-                document.getElementById('cp').innerHTML = top5.map((x, i) => `<img src="${getSafeImg(x)}" class="carousel-img ${i==0?'active':''}" onclick="openDetail(${x.id})">`).join('');
-                document.getElementById('st').innerHTML = [...items, ...items].map(x => `<img src="${getSafeImg(x)}" onclick="openDetail(${x.id})">`).join('');
+                document.getElementById('cp').innerHTML = top5.map((x, i) => `<img src="${x.imgs[0] || ''}" class="carousel-img ${i==0?'active':''}" onclick="openDetail(${x.id})">`).join('');
+                document.getElementById('st').innerHTML = [...items, ...items].map(x => `<img src="${x.imgs[0] || ''}" onclick="openDetail(${x.id})">`).join('');
             }
         }
 
         function startCarousel() {
-            let idx = 0; setInterval(() => {
+            let idx = 0;
+            setInterval(() => {
                 const imgs = document.querySelectorAll('.carousel-img');
-                if(imgs.length > 1) { imgs.forEach(img => img.classList.remove('active')); idx = (idx + 1) % imgs.length; imgs[idx].classList.add('active'); }
+                if(imgs.length > 1) {
+                    imgs.forEach(img => img.classList.remove('active'));
+                    idx = (idx + 1) % imgs.length;
+                    imgs[idx].classList.add('active');
+                }
             }, 5000);
         }
 
         function formatDesc(text) {
-            if(!text) return '無描述'; let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return safeText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:var(--h-blue); text-decoration:underline; word-break: break-all;">$1</a>');
+            if(!text) return '無描述';
+            let safeText = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return safeText.replace(urlRegex, '<a href="$1" target="_blank" style="color:var(--h-blue); text-decoration:underline; word-break: break-all;">$1</a>');
         }
 
         function openDetail(id) {
             const x = items.find(i => i.id == id);
-            let media = `<div class="h-scroll">` + (x.imgs||[]).map(img => `<img src="${img}" onclick="openViewer('${img}')">`).join('') + `</div>`;
+            let media = `<div class="h-scroll">` + x.imgs.map(img => `<img src="${img}" onclick="openViewer('${img}')">`).join('') + `</div>`;
+            
+            let vidId = "";
             if(x.vid) {
-                let vidId = "";
                 if (x.vid.includes("youtu.be/")) vidId = x.vid.split("youtu.be/")[1].split("?")[0];
                 else if (x.vid.includes("v=")) vidId = x.vid.split("v=")[1].split("&")[0];
                 else if (x.vid.includes("shorts/")) vidId = x.vid.split("shorts/")[1].split("?")[0];
                 if(vidId) media += `<iframe width="100%" height="210" src="https://www.youtube.com/embed/${vidId}" frameborder="0" allowfullscreen style="border-radius:12px; margin-top:15px;"></iframe>`;
             }
-            document.getElementById('dtC').innerHTML = `${media}<h3 style="color:var(--purple); margin: 15px 0 5px 0;">${x.name||'未命名'}</h3><p style="font-size:12px; color:#999; margin: 0 0 15px 0;">${x.date || '無日期'} | ${x.cate||'未分類'}</p><div style="background:#f9f9f9; padding:15px; border-radius:12px; font-size:14px; color:#444; line-height:1.6; white-space:pre-wrap;">${formatDesc(x.desc)}</div><button onclick="delItem(${x.id})" style="color:#ff4444; background:none; border:none; width:100%; margin-top:20px; padding:10px;">🗑️ 刪除記錄</button>`;
+
+            document.getElementById('dtC').innerHTML = `
+                ${media}
+                <h3 style="color:var(--purple); margin: 15px 0 5px 0;">${x.name}</h3>
+                <p style="font-size:12px; color:#999; margin: 0 0 15px 0;">${x.date || '無日期'} | ${x.cate}</p>
+                <div style="background:#f9f9f9; padding:15px; border-radius:12px; font-size:14px; color:#444; line-height:1.6; white-space:pre-wrap;">${formatDesc(x.desc)}</div>
+                <button onclick="delItem(${x.id})" style="color:#ff4444; background:none; border:none; width:100%; margin-top:20px; padding:10px;">🗑️ 刪除記錄</button>
+            `;
             document.getElementById('editBtn').onclick = () => openEdit(x);
-            document.getElementById('dtM').classList.add('active'); document.getElementById('ov').classList.add('active');
+            document.getElementById('dtM').classList.add('active');
+            document.getElementById('ov').classList.add('active');
         }
 
         function openViewer(src) { document.getElementById('viewerImg').src = src; document.getElementById('imgViewer').classList.add('active'); }
@@ -585,37 +627,43 @@
         
         function openAdd() { 
             document.getElementById('editId').value = ""; document.getElementById('n').value = ""; document.getElementById('dt').value = ""; document.getElementById('desc').value = ""; document.getElementById('vid').value = "";
-            document.getElementById('selL1').value = ""; popL2(); tempImgs = []; renderEditPreview();
-            document.getElementById('modalTitle').innerText = "➕ 加入收藏"; document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active'); 
+            document.getElementById('selL1').value = ""; popL2();
+            
+            editingImgs = []; renderEditImgs(); // 清空預覽
+            document.getElementById('modalTitle').innerText = "➕ 加入收藏";
+            document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active'); 
         }
         
         function openEdit(x) {
-            closeAll(); document.getElementById('editId').value = x.id; document.getElementById('n').value = x.name; document.getElementById('dt').value = x.date; document.getElementById('desc').value = x.desc; document.getElementById('vid').value = x.vid;
-            let parts = (x.cate || "").split('-'); document.getElementById('selL1').value = parts[0] || ""; popL2(); document.getElementById('selL2').value = parts[1] || ""; popL3(); document.getElementById('selL3').value = parts[2] || "";
-            tempImgs = [...(x.imgs || [])]; renderEditPreview(); document.getElementById('modalTitle').innerText = "📝 編輯資料"; document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active');
+            closeAll();
+            document.getElementById('editId').value = x.id; document.getElementById('n').value = x.name; document.getElementById('dt').value = x.date; 
+            document.getElementById('desc').value = x.desc; document.getElementById('vid').value = x.vid;
+            
+            let parts = (x.cate || "").split('-');
+            document.getElementById('selL1').value = parts[0] || ""; popL2();
+            document.getElementById('selL2').value = parts[1] || ""; popL3();
+            document.getElementById('selL3').value = parts[2] || "";
+            
+            editingImgs = [...x.imgs]; // 複製現有圖片
+            renderEditImgs(); // 顯示可編輯的圖片列表
+
+            document.getElementById('modalTitle').innerText = "📝 編輯資料";
+            document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active');
         }
 
-        /* 修復：為刪除收藏加入 try-catch 防止閃退死結 */
-        function delItem(id) { 
-            if(confirm("確定刪除？")) { 
-                try {
-                    const tx = db.transaction(STORE_NAME, "readwrite"); 
-                    tx.objectStore(STORE_NAME).delete(id); 
-                    tx.oncomplete = () => location.reload(); 
-                    tx.onerror = (e) => alert("刪除失敗：" + e.target.error.message);
-                } catch(err) {
-                    alert("資料庫異常，無法執行刪除。\n請嘗試使用首頁的「強制重置」按鈕。");
-                }
-            } 
-        }
-
+        function delItem(id) { if(confirm("確定刪除？")) { const tx = db.transaction(STORE_NAME, "readwrite"); tx.objectStore(STORE_NAME).delete(id); tx.oncomplete = () => location.reload(); } }
         function doSearch() {
-            const k = document.getElementById('sName').value.toLowerCase(), s = document.getElementById('sStart').value, e = document.getElementById('sEnd').value;
-            render(items.filter(x => { const mN = (x.name||'').toLowerCase().includes(k); const xD = x.date ? x.date.substring(0, 7) : ""; let mD = true; if(s) mD = mD && (xD >= s); if(e) mD = mD && (xD <= e); return mN && mD; }));
+            const k = document.getElementById('sName').value.toLowerCase();
+            const s = document.getElementById('sStart').value, e = document.getElementById('sEnd').value;
+            render(items.filter(x => {
+                const mN = x.name.toLowerCase().includes(k);
+                const xD = x.date ? x.date.substring(0, 7) : "";
+                let mD = true;
+                if(s) mD = mD && (xD >= s); if(e) mD = mD && (xD <= e);
+                return mN && mD;
+            }));
         }
         function toggleDatePopover() { document.getElementById('datePop').classList.toggle('active'); }
     </script>
 </body>
 </html>
-
-
