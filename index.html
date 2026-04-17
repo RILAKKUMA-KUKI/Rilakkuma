@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鬆弛熊圖鑑</title>
+    <title>鬆弛熊圖鑑 v8.6.3</title>
     
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -37,7 +37,6 @@
         .date-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; }
         .date-popover { position: absolute; top: 55px; right: 0; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: none; z-index: 100; width: 240px; box-sizing: border-box; }
         .date-popover.active { display: block; }
-        /* 修復 iOS 日期輸入框跑版問題 */
         .date-popover input { width: 100%; box-sizing: border-box; margin-bottom: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; background-color: #fafafa; -webkit-appearance: none; min-height: 40px; }
 
         .carousel { width: 100%; aspect-ratio: 16/10; background: #fff; border-radius: 12px; overflow: hidden; position: relative; margin-top: 15px; }
@@ -87,7 +86,7 @@
 
     <div class="header">
         <div onclick="toggleSidebar(true)" style="font-size:24px; cursor:pointer;">☰</div>
-        <div class="logo">鬆弛熊圖鑑</div>
+        <div class="logo">鬆弛熊圖鑑 v8.6.3</div>
         <div>🐻</div>
     </div>
 
@@ -207,15 +206,15 @@
             document.getElementById('grid').innerHTML = `
                 <div style="grid-column: span 2; text-align:center; padding: 30px 20px; background:#ffebeb; border-radius:12px; border: 1px solid #ffcccc;">
                     <h3 style="color:#d32f2f; margin-top:0;">⚠️ 資料庫讀取卡死</h3>
-                    <p style="font-size:14px; color:#555; text-align:left;">原因：通常是因為上一筆資料過大，導致手機瀏覽器的記憶體滿載而卡住。</p>
+                    <p style="font-size:14px; color:#555; text-align:left;">原因：之前的圖片數據過大，導致手機瀏覽器記憶體崩潰鎖死。</p>
                     <p style="font-size:12px; color:#888; text-align:left; word-break:break-all;">系統代碼: ${errorMsg}</p>
                     <button onclick="forceResetDB()" style="padding:15px; background:#d32f2f; color:white; border:none; border-radius:8px; margin-top:15px; cursor:pointer; width:100%; font-weight:bold; font-size:16px;">🚨 強制清除卡死狀態</button>
-                    <p style="font-size:12px; color:#d32f2f; margin-top:10px;">(注意：此動作會清空異常的資料庫，重置後請使用右下角 📂 重新匯入你的備份檔)</p>
+                    <p style="font-size:12px; color:#d32f2f; margin-top:10px;">(注意：此動作會清空異常的資料庫，重置後請重新匯入備份檔)</p>
                 </div>`;
         }
 
         function forceResetDB() {
-            if(confirm("即將強制重置資料庫來解除卡死狀態！\n如果你之前有下載過 💾 備份檔，請在重置後重新匯入。\n確定要重置嗎？")) {
+            if(confirm("即將強制重置資料庫來解除卡死狀態！\n確定要重置嗎？")) {
                 const req = indexedDB.deleteDatabase(DB_NAME);
                 req.onsuccess = () => { alert("解除卡死成功！網頁即將重新整理。"); location.reload(); };
                 req.onerror = () => { alert("強制重置失敗，請嘗試手動到手機設定清除 Safari/Chrome 的網站資料。"); };
@@ -227,7 +226,6 @@
                 if (!db) throw new Error("資料庫實體不存在");
                 const tx = db.transaction([STORE_NAME, CATE_STORE], "readonly");
                 
-                // 加入 transaction 錯誤攔截，防止無限等待
                 tx.onerror = (e) => { throw new Error(e.target.error); };
 
                 items = await new Promise((res, rej) => {
@@ -242,7 +240,7 @@
                         });
                         res(resultItems);
                     };
-                    req.onerror = (e) => rej(e.target.error); // 避免 Promise 永遠卡死
+                    req.onerror = (e) => rej(e.target.error);
                 });
                 
                 const cateRes = await new Promise((res, rej) => {
@@ -348,16 +346,26 @@
         }
 
         async function saveCates() {
-            const tx = db.transaction(CATE_STORE, "readwrite");
-            tx.objectStore(CATE_STORE).put({ id: "main_cates", data: cates });
+            try {
+                const tx = db.transaction(CATE_STORE, "readwrite");
+                tx.objectStore(CATE_STORE).put({ id: "main_cates", data: cates });
+            } catch (err) {
+                alert("儲存分類失敗，資料庫可能異常：" + err.message);
+            }
         }
 
+        /* 修復：為刪除加入 try-catch 防止靜默失敗 */
         function delCate(e, m, s=null, ss=null) {
             e.stopPropagation(); let name = ss ? ss : (s ? s : m);
             if(!confirm(`確定刪除分類「${name}」？`)) return;
             if (ss) cates[m][s] = cates[m][s].filter(x => x !== ss);
             else if (s) delete cates[m][s]; else delete cates[m];
-            saveCates().then(() => loadAll());
+            
+            try {
+                saveCates().then(() => loadAll());
+            } catch (err) {
+                alert("無法刪除！資料庫異常，請嘗試重新整理或重置。\n錯誤：" + err.message);
+            }
         }
 
         function addCate() {
@@ -368,10 +376,15 @@
             if(!cates[m]) cates[m] = {};
             if(s && !cates[m][s]) cates[m][s] = [];
             if(s && ss && !cates[m][s].includes(ss)) cates[m][s].push(ss);
-            saveCates().then(() => { loadAll(); document.getElementById('newMain').value = ""; document.getElementById('newSub').value = ""; document.getElementById('newSubSub').value = ""; });
+            
+            try {
+                saveCates().then(() => { loadAll(); document.getElementById('newMain').value = ""; document.getElementById('newSub').value = ""; document.getElementById('newSubSub').value = ""; });
+            } catch (err) {
+                alert("無法新增分類：" + err.message);
+            }
         }
 
-        /* ------------------ 備份匯出匯入 (加入防死結機制) ------------------ */
+        /* ------------------ 備份匯出匯入 ------------------ */
         async function exportData() {
             try {
                 if(!db) throw new Error("資料庫未連接");
@@ -388,14 +401,14 @@
                     req.onerror = () => rej(new Error("讀取分類失敗"));
                 });
 
-                const backupData = { version: "v8.6.2", date: new Date().toISOString(), items: itemsData, cates: catesData ? catesData.data : null };
+                const backupData = { version: "v8.6.3", date: new Date().toISOString(), items: itemsData, cates: catesData ? catesData.data : null };
                 const blob = new Blob([JSON.stringify(backupData)], { type: "application/json" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url; a.download = `鬆弛熊圖鑑備份_${new Date().toLocaleDateString()}.json`;
                 a.click();
             } catch(e) {
-                alert(`匯出失敗！\n可能是因為資料庫處於卡死狀態。\n\n詳細錯誤：${e.message}\n如果一直卡住，請重新整理頁面使用「強制重置」。`);
+                alert(`匯出失敗！\n可能是因為資料庫處於卡死狀態。\n\n如果一直卡住，請重新整理頁面使用「強制重置」。`);
             }
         }
 
@@ -433,10 +446,11 @@
             document.getElementById('selL3').innerHTML = s;
         }
 
+        /* 修復：加強極限壓縮，降低 OOM 風險 */
         async function handleFileUpload(e) {
             const files = e.target.files; if(!files.length) return;
             const btn = document.getElementById('saveBtn');
-            btn.innerText = "處理圖片/PDF中..."; btn.disabled = true;
+            btn.innerText = "極限壓縮中..."; btn.disabled = true;
             
             for(let file of files) {
                 if(file.size > 10 * 1024 * 1024) { alert("⚠️ 警告：單個檔案超過 10MB，儲存時可能會導致瀏覽器崩潰，建議縮小後再上傳！"); }
@@ -446,11 +460,13 @@
                         const arrayBuffer = await file.arrayBuffer();
                         const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
                         for(let i = 1; i <= pdf.numPages; i++) {
-                            const page = await pdf.getPage(i); const viewport = page.getViewport({scale: 1.5});
+                            const page = await pdf.getPage(i); 
+                            // 修復：將 PDF 解析放大倍率從 1.5 降為 1.0，大幅減少記憶體佔用
+                            const viewport = page.getViewport({scale: 1.0}); 
                             const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
                             canvas.width = viewport.width; canvas.height = viewport.height;
                             await page.render({canvasContext: ctx, viewport: viewport}).promise;
-                            tempImgs.push(canvas.toDataURL('image/jpeg', 0.8));
+                            tempImgs.push(canvas.toDataURL('image/jpeg', 0.6)); // 修復：降低品質至 0.6
                         }
                     } catch (err) { alert("PDF 讀取失敗！"); }
                 } else if (file.type.startsWith('image/')) {
@@ -469,7 +485,8 @@
 
         function removeTempImg(idx) { tempImgs.splice(idx, 1); renderEditPreview(); }
 
-        function compressImage(file, maxDim = 1080) {
+        /* 修復：極限壓縮邏輯，最大寬度降為 800，品質降為 0.6 */
+        function compressImage(file, maxDim = 800) {
             return new Promise(res => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = e => {
@@ -480,7 +497,7 @@
                         if (w > h) { if(w > maxDim){ h *= maxDim/w; w = maxDim; } } else { if(h > maxDim){ w *= maxDim/h; h = maxDim; } }
                         canvas.width = w; canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        res(canvas.toDataURL('image/jpeg', 0.8));
+                        res(canvas.toDataURL('image/jpeg', 0.6));
                     };
                 };
             });
@@ -497,16 +514,24 @@
                     imgs: [...tempImgs]
                 };
                 
+                // 修復：體積警報機制，避免直接寫爆
+                let payloadSize = JSON.stringify(data).length;
+                if(payloadSize > 5000000) { // 大於 5MB
+                    alert("⚠️ 注意：這次儲存的圖片資料量極大！\n系統會嘗試儲存，但如果稍後發生當機或白屏，請減少圖片數量。");
+                }
+                
                 const tx = db.transaction(STORE_NAME, "readwrite");
                 
-                // 加入防呆：如果存檔失敗會立刻警告，不會讓系統卡死
                 tx.onerror = (e) => {
-                    alert("儲存失敗！\n可能是圖片/PDF數量過多或檔案太大，超出了手機瀏覽器的容量限制。\n\n請減少圖片數量重試。");
+                    alert("❌ 儲存失敗！\n手機記憶體無法承受這麼大的圖片檔案，資料庫連線已中斷。\n請重新整理頁面後，減少圖片數量再試一次。");
                     btn.innerText = "儲存收藏"; btn.disabled = false;
                 };
 
                 tx.objectStore(STORE_NAME).put(data);
-                tx.oncomplete = () => location.reload();
+                tx.oncomplete = () => {
+                    alert("✅ 儲存成功！");
+                    location.reload();
+                };
             } catch(err) {
                 alert("未預期錯誤: " + err.message); btn.innerText = "儲存收藏"; btn.disabled = false;
             }
@@ -570,7 +595,20 @@
             tempImgs = [...(x.imgs || [])]; renderEditPreview(); document.getElementById('modalTitle').innerText = "📝 編輯資料"; document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active');
         }
 
-        function delItem(id) { if(confirm("確定刪除？")) { const tx = db.transaction(STORE_NAME, "readwrite"); tx.objectStore(STORE_NAME).delete(id); tx.oncomplete = () => location.reload(); } }
+        /* 修復：為刪除收藏加入 try-catch 防止閃退死結 */
+        function delItem(id) { 
+            if(confirm("確定刪除？")) { 
+                try {
+                    const tx = db.transaction(STORE_NAME, "readwrite"); 
+                    tx.objectStore(STORE_NAME).delete(id); 
+                    tx.oncomplete = () => location.reload(); 
+                    tx.onerror = (e) => alert("刪除失敗：" + e.target.error.message);
+                } catch(err) {
+                    alert("資料庫異常，無法執行刪除。\n請嘗試使用首頁的「強制重置」按鈕。");
+                }
+            } 
+        }
+
         function doSearch() {
             const k = document.getElementById('sName').value.toLowerCase(), s = document.getElementById('sStart').value, e = document.getElementById('sEnd').value;
             render(items.filter(x => { const mN = (x.name||'').toLowerCase().includes(k); const xD = x.date ? x.date.substring(0, 7) : ""; let mD = true; if(s) mD = mD && (xD >= s); if(e) mD = mD && (xD <= e); return mN && mD; }));
@@ -579,4 +617,5 @@
     </script>
 </body>
 </html>
+
 
