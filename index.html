@@ -88,6 +88,15 @@
         .img-viewer.active { display: flex; }
         .img-viewer img { max-width: 100%; max-height: 85vh; object-fit: contain; }
         .close-viewer { position: absolute; top: 30px; right: 20px; color: white; font-size: 40px; cursor: pointer; line-height: 1; padding: 10px; }
+        .total-box {
+    background: var(--purple); /* 延用你的紫色主題 */
+    color: white;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
     </style>
 </head>
 <body>
@@ -157,6 +166,11 @@
         <input type="hidden" id="editId">
         <input type="text" id="n" placeholder="名稱">
         <input type="date" id="dt">
+
+        <div class="input-group">
+    <label>消費金額 (可輸入計算式，如 100+50):</label>
+    <input type="text" id="itemPrice" placeholder="例如: 500*0.9">
+</div>
         
         <div style="background:#f0f0f0; padding:10px; border-radius:8px; margin:8px 0;">
             <p style="font-size:12px; color:#666; margin:0 0 5px 0;">資料分類</p>
@@ -186,6 +200,16 @@
     </div>
 
     <script>
+        // 將輸入的字串（如 "100+50"）轉為數字
+function calculateString(str) {
+    try {
+        // 使用新式 Function 代替 eval 較為安全
+        return Function(`'use strict'; return (${str})`)() || 0;
+    } catch (e) {
+        return 0; // 如果輸入格式錯誤，回傳 0
+    }
+}
+        
         // PDF.js Worker 設定
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
@@ -253,6 +277,25 @@
 
         function renderMenu() {
             let html = `<div class="cate-row" style="background:#f9f9f9;"><span class="cate-name" onclick="filterCate('all')">📚 顯示全部</span></div>`;
+
+            function renderMenu() {
+    // 1. 計算總消費
+    const totalCost = items.reduce((sum, item) => sum + (item.priceValue || 0), 0);
+
+    // 2. 側邊欄 HTML 模板
+    const menuHTML = `
+        <div class="menu-header">
+            <div class="total-box">
+                <div style="font-size: 12px; opacity: 0.8;">總消費金額</div>
+                <div style="font-size: 20px; font-weight: bold;">$ ${totalCost.toLocaleString()}</div>
+            </div>
+        </div>
+        <div class="menu-list">
+            </div>
+    `;
+    
+    document.getElementById('sidebar').innerHTML = menuHTML;
+}
             
             for(let m in cates) {
                 let mId = `m_${m.replace(/\s/g,'_')}`;
@@ -397,6 +440,20 @@
             
             saveCates().then(() => loadAll());
         }
+
+        async function saveItem() {
+    const priceRaw = document.getElementById('itemPrice').value;
+    const newItem = {
+        name: document.getElementById('itemName').value,
+        price: priceRaw, // 儲存原始字串以便日後修改
+        priceValue: calculateString(priceRaw), // 儲存計算後的數值
+        // ... 其他原本的欄位 (imgs, date, category 等)
+    };
+    
+    // 寫入資料庫的邏輯 (這部分維持你原本的 tx 寫法)
+    // ...
+    loadAll(); // 重新載入
+}
 
         function addCate() {
             let m = document.getElementById('newMain').value.trim();
