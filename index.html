@@ -88,18 +88,39 @@
         .img-viewer.active { display: flex; }
         .img-viewer img { max-width: 100%; max-height: 85vh; object-fit: contain; }
         .close-viewer { position: absolute; top: 30px; right: 20px; color: white; font-size: 40px; cursor: pointer; line-height: 1; padding: 10px; }
+
+        /* --- 新增：載入中畫面樣式 --- */
+        .loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: var(--purple); font-weight: bold; font-size: 16px;
+            transition: opacity 0.3s;
+        }
+        .loader-spinner {
+            font-size: 40px; margin-bottom: 10px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- 新增：側邊欄總金額盒子 --- */
         .total-box {
-    background: var(--purple); /* 延用你的紫色主題 */
-    color: white;
-    padding: 20px;
-    margin: 10px;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
+            background: var(--purple);
+            color: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 <body>
+
+    <div id="mainLoader" class="loader-overlay">
+        <div class="loader-spinner">🐻</div>
+        <div>圖鑑讀取中...</div>
+    </div>
 
     <div class="header">
         <div onclick="toggleSidebar(true)" style="font-size:24px; cursor:pointer;">☰</div>
@@ -108,7 +129,7 @@
     </div>
 
     <div class="sidebar" id="sb">
-        <h2 style="color:var(--purple); margin-top:0; font-size: 18px;">分類目錄 (長按拖曳排序)</h2>
+        <h2 style="color:var(--purple); margin-top:0; font-size: 18px;">分類目錄 (長按可排序)</h2>
         <div id="menuContent"></div>
         <div style="margin-top:25px; padding:15px; background:#f4f4f4; border-radius:10px;">
             <p style="font-size:13px; color:#666; font-weight:bold; margin-top:0;">➕ 新增分類</p>
@@ -166,12 +187,9 @@
         <input type="hidden" id="editId">
         <input type="text" id="n" placeholder="名稱">
         <input type="date" id="dt">
-
-        <div class="input-group">
-    <label>消費金額 (可輸入計算式，如 100+50):</label>
-    <input type="text" id="itemPrice" placeholder="例如: 500*0.9">
-</div>
         
+        <input type="text" id="price" placeholder="消費金額 (支援算式，例如: 100+50)">
+
         <div style="background:#f0f0f0; padding:10px; border-radius:8px; margin:8px 0;">
             <p style="font-size:12px; color:#666; margin:0 0 5px 0;">資料分類</p>
             <select id="selL1" onchange="popL2()"></select>
@@ -200,18 +218,19 @@
     </div>
 
     <script>
-        // 將輸入的字串（如 "100+50"）轉為數字
-function calculateString(str) {
-    try {
-        // 使用新式 Function 代替 eval 較為安全
-        return Function(`'use strict'; return (${str})`)() || 0;
-    } catch (e) {
-        return 0; // 如果輸入格式錯誤，回傳 0
-    }
-}
-        
         // PDF.js Worker 設定
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        // --- 新增：數學計算器 (將輸入的金額算式轉為數字) ---
+        function calculateString(str) {
+            if (!str) return 0;
+            try {
+                const cleanStr = str.replace(/[^-()\d/*+.]/g, '');
+                return Function(`'use strict'; return (${cleanStr})`)() || 0;
+            } catch (e) {
+                return 0;
+            }
+        }
 
         const DB_NAME = "BearMuseumDB";
         const STORE_NAME = "ItemsStore";
@@ -230,6 +249,10 @@ function calculateString(str) {
         request.onsuccess = e => { db = e.target.result; loadAll(); };
 
         async function loadAll() {
+            // --- 新增：顯示載入畫面 ---
+            const loader = document.getElementById('mainLoader');
+            if(loader) loader.style.display = 'flex';
+
             const tx = db.transaction([STORE_NAME, CATE_STORE], "readonly");
             items = await new Promise(res => {
                 const req = tx.objectStore(STORE_NAME).getAll();
@@ -261,6 +284,12 @@ function calculateString(str) {
                 cates = loaded;
             }
             renderMenu(); popL1(); render(); startCarousel();
+
+            // --- 新增：隱藏載入畫面 ---
+            if(loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 300);
+            }
         }
 
         /* ------------------ 目錄編輯與排序 (Sortable) ------------------ */
@@ -276,26 +305,17 @@ function calculateString(str) {
         }
 
         function renderMenu() {
-            let html = `<div class="cate-row" style="background:#f9f9f9;"><span class="cate-name" onclick="filterCate('all')">📚 顯示全部</span></div>`;
+            // --- 新增：計算總金額 ---
+            const totalCost = items.reduce((sum, item) => sum + (item.priceValue || 0), 0);
 
-            function renderMenu() {
-    // 1. 計算總消費
-    const totalCost = items.reduce((sum, item) => sum + (item.priceValue || 0), 0);
-
-    // 2. 側邊欄 HTML 模板
-    const menuHTML = `
-        <div class="menu-header">
-            <div class="total-box">
-                <div style="font-size: 12px; opacity: 0.8;">總消費金額</div>
-                <div style="font-size: 20px; font-weight: bold;">$ ${totalCost.toLocaleString()}</div>
-            </div>
-        </div>
-        <div class="menu-list">
-            </div>
-    `;
-    
-    document.getElementById('sidebar').innerHTML = menuHTML;
-}
+            // --- 新增：插入總金額區塊 ---
+            let html = `
+                <div class="total-box">
+                    <div style="font-size: 13px; opacity: 0.9;">總消費金額</div>
+                    <div style="font-size: 26px; font-weight: bold; margin-top:5px;">HK$ ${totalCost.toLocaleString()}</div>
+                </div>
+                <div class="cate-row" style="background:#f9f9f9;"><span class="cate-name" onclick="filterCate('all')">📚 顯示全部</span></div>
+            `;
             
             for(let m in cates) {
                 let mId = `m_${m.replace(/\s/g,'_')}`;
@@ -349,11 +369,11 @@ function calculateString(str) {
         // 初始化目錄拖曳
         function initMenuSortable() {
             const commonOpt = {
-                animation: 150, delay: 250, delayOnTouchOnly: true, // 手機長按250ms才拖曳
+                animation: 150, delay: 250, delayOnTouchOnly: true,
                 onEnd: () => rebuildCatesFromDOM()
             };
             
-            Sortable.create(document.getElementById('menuContent'), { ...commonOpt, group: 'main' });
+            Sortable.create(document.getElementById('menuContent'), { ...commonOpt, group: 'main', filter: '.total-box, .cate-row[style*="background:#f9f9f9"]' }); // 防止總金額和全部顯示被拖曳
             
             document.querySelectorAll('.sub-container').forEach(el => {
                 Sortable.create(el, { ...commonOpt, group: 'sub' });
@@ -441,20 +461,6 @@ function calculateString(str) {
             saveCates().then(() => loadAll());
         }
 
-        async function saveItem() {
-    const priceRaw = document.getElementById('itemPrice').value;
-    const newItem = {
-        name: document.getElementById('itemName').value,
-        price: priceRaw, // 儲存原始字串以便日後修改
-        priceValue: calculateString(priceRaw), // 儲存計算後的數值
-        // ... 其他原本的欄位 (imgs, date, category 等)
-    };
-    
-    // 寫入資料庫的邏輯 (這部分維持你原本的 tx 寫法)
-    // ...
-    loadAll(); // 重新載入
-}
-
         function addCate() {
             let m = document.getElementById('newMain').value.trim();
             let s = document.getElementById('newSub').value.trim();
@@ -473,9 +479,7 @@ function calculateString(str) {
             });
         }
 
-        /* ------------------ 圖片/PDF 引擎 (極致壓縮 & 陣列管理) ------------------ */
-        
-        // 渲染編輯中的圖片列表
+        /* ------------------ 圖片/PDF 引擎 ------------------ */
         function renderEditImgs() {
             const container = document.getElementById('imgEditList');
             container.innerHTML = editingImgs.map((src, i) => `
@@ -487,9 +491,8 @@ function calculateString(str) {
             
             if(!sortableImgsInstance) {
                 sortableImgsInstance = Sortable.create(container, {
-                    animation: 150, delay: 200, delayOnTouchOnly: true, // 長按拖曳
+                    animation: 150, delay: 200, delayOnTouchOnly: true,
                     onEnd: (evt) => {
-                        // 更新陣列排序
                         const itemEl = editingImgs.splice(evt.oldIndex, 1)[0];
                         editingImgs.splice(evt.newIndex, 0, itemEl);
                         renderEditImgs();
@@ -503,7 +506,6 @@ function calculateString(str) {
             renderEditImgs();
         }
 
-        // 監聽文件選擇 (支援圖片與 PDF)
         document.getElementById('imgs').addEventListener('change', async function() {
             if(this.files.length === 0) return;
             const status = document.getElementById('loadingStatus');
@@ -520,31 +522,27 @@ function calculateString(str) {
             }
             
             renderEditImgs();
-            this.value = ""; // 清空 input 以便重複選擇
+            this.value = ""; 
             status.style.display = 'none'; btn.disabled = false;
         });
 
-        // 處理 PDF 轉圖片
         async function processPDF(file) {
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
             
             for(let i=1; i<=pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
-                const viewport = page.getViewport({scale: 1.5}); // 品質與大小的平衡
+                const viewport = page.getViewport({scale: 1.5}); 
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 canvas.width = viewport.width; canvas.height = viewport.height;
                 
                 await page.render({canvasContext: ctx, viewport: viewport}).promise;
-                
-                // 轉為 WebP 極致壓縮
                 let dataUrl = compressCanvas(canvas, 800);
                 editingImgs.push(dataUrl);
             }
         }
 
-        // 壓縮圖片引擎 (WebP, max: 800px, quality: 0.5) 專為極大容量設計
         function compressImage(file) {
             return new Promise(res => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
@@ -553,7 +551,7 @@ function calculateString(str) {
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         let w = img.width, h = img.height;
-                        const maxDim = 800; // 壓縮至不崩潰程度
+                        const maxDim = 800; 
                         if (w > h) { if(w > maxDim){ h *= maxDim/w; w = maxDim; } }
                         else { if(h > maxDim){ w *= maxDim/h; h = maxDim; } }
                         canvas.width = w; canvas.height = h;
@@ -565,7 +563,6 @@ function calculateString(str) {
         }
 
         function compressCanvas(canvas, maxDim) {
-            // WebP 格式壓縮率極高，0.5 品質可大幅減少體積
             return canvas.toDataURL('image/webp', 0.5); 
         }
 
@@ -607,11 +604,16 @@ function calculateString(str) {
             let cateString = [l1, l2, l3].filter(Boolean).join('-');
             if (!cateString) cateString = "未分類";
 
-            // 直接存入 editingImgs 陣列（已包含舊圖片、新圖片以及最新排序）
+            // --- 新增：讀取與計算金額 ---
+            const pRaw = document.getElementById('price').value;
+            const pVal = calculateString(pRaw);
+
             const data = {
                 id: id ? parseInt(id) : Date.now(),
                 name: document.getElementById('n').value,
                 date: document.getElementById('dt').value,
+                price: pRaw,        // 存儲原始字串
+                priceValue: pVal,   // 存儲計算數字
                 cate: cateString,
                 desc: document.getElementById('desc').value,
                 vid: document.getElementById('vid').value,
@@ -624,13 +626,20 @@ function calculateString(str) {
         }
 
         function render(list = items) {
+            // --- 新增：懶加載 loading="lazy" ---
             document.getElementById('grid').innerHTML = list.length === 0 ? `<div style="grid-column: span 2; text-align:center; padding: 40px 0; color:#999;">空空如也</div>` : 
-            list.map(x => `<div class="card" onclick="openDetail(${x.id})"><img src="${x.imgs[0] || ''}"><div style="padding:10px; font-size:13px; font-weight:bold;">${x.name}</div></div>`).join('');
+            list.map(x => `<div class="card" onclick="openDetail(${x.id})"><img src="${x.imgs[0] || ''}" loading="lazy"><div style="padding:10px; font-size:13px; font-weight:bold;">${x.name}</div></div>`).join('');
             
             if(items.length > 0) {
                 const top5 = items.slice(0, 5);
                 document.getElementById('cp').innerHTML = top5.map((x, i) => `<img src="${x.imgs[0] || ''}" class="carousel-img ${i==0?'active':''}" onclick="openDetail(${x.id})">`).join('');
-                document.getElementById('st').innerHTML = [...items, ...items].map(x => `<img src="${x.imgs[0] || ''}" onclick="openDetail(${x.id})">`).join('');
+                
+                // --- 新增：優化跑馬燈效能，只取前10個，並加入懶加載 ---
+                const trackItems = items.slice(0, 10);
+                document.getElementById('st').innerHTML = [...trackItems, ...trackItems].map(x => `<img src="${x.imgs[0] || ''}" loading="lazy" onclick="openDetail(${x.id})">`).join('');
+            } else {
+                document.getElementById('cp').innerHTML = '';
+                document.getElementById('st').innerHTML = '';
             }
         }
 
@@ -665,10 +674,14 @@ function calculateString(str) {
                 if(vidId) media += `<iframe width="100%" height="210" src="https://www.youtube.com/embed/${vidId}" frameborder="0" allowfullscreen style="border-radius:12px; margin-top:15px;"></iframe>`;
             }
 
+            // --- 新增：在詳情頁顯示金額 ---
+            const priceDisplay = (x.priceValue && x.priceValue > 0) ? `<div style="font-size:15px; font-weight:bold; color:#4caf50; margin: 5px 0 10px 0;">💰 HK$ ${x.priceValue.toLocaleString()}</div>` : '';
+
             document.getElementById('dtC').innerHTML = `
                 ${media}
                 <h3 style="color:var(--purple); margin: 15px 0 5px 0;">${x.name}</h3>
-                <p style="font-size:12px; color:#999; margin: 0 0 15px 0;">${x.date || '無日期'} | ${x.cate}</p>
+                <p style="font-size:12px; color:#999; margin: 0 0 5px 0;">${x.date || '無日期'} | ${x.cate}</p>
+                ${priceDisplay}
                 <div style="background:#f9f9f9; padding:15px; border-radius:12px; font-size:14px; color:#444; line-height:1.6; white-space:pre-wrap;">${formatDesc(x.desc)}</div>
                 <button onclick="delItem(${x.id})" style="color:#ff4444; background:none; border:none; width:100%; margin-top:20px; padding:10px;">🗑️ 刪除記錄</button>
             `;
@@ -683,26 +696,35 @@ function calculateString(str) {
         function toggleSidebar(s) { document.getElementById('sb').classList.toggle('active', s); document.getElementById('ov').classList.toggle('active', s); }
         
         function openAdd() { 
-            document.getElementById('editId').value = ""; document.getElementById('n').value = ""; document.getElementById('dt').value = ""; document.getElementById('desc').value = ""; document.getElementById('vid').value = "";
+            document.getElementById('editId').value = ""; 
+            document.getElementById('n').value = ""; 
+            document.getElementById('dt').value = ""; 
+            document.getElementById('desc').value = ""; 
+            document.getElementById('vid').value = "";
+            document.getElementById('price').value = ""; // --- 新增：清空金額 ---
             document.getElementById('selL1').value = ""; popL2();
             
-            editingImgs = []; renderEditImgs(); // 清空預覽
+            editingImgs = []; renderEditImgs();
             document.getElementById('modalTitle').innerText = "➕ 加入收藏";
             document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active'); 
         }
         
         function openEdit(x) {
             closeAll();
-            document.getElementById('editId').value = x.id; document.getElementById('n').value = x.name; document.getElementById('dt').value = x.date; 
-            document.getElementById('desc').value = x.desc; document.getElementById('vid').value = x.vid;
+            document.getElementById('editId').value = x.id; 
+            document.getElementById('n').value = x.name; 
+            document.getElementById('dt').value = x.date; 
+            document.getElementById('desc').value = x.desc; 
+            document.getElementById('vid').value = x.vid;
+            document.getElementById('price').value = x.price || ""; // --- 新增：回填金額 ---
             
             let parts = (x.cate || "").split('-');
             document.getElementById('selL1').value = parts[0] || ""; popL2();
             document.getElementById('selL2').value = parts[1] || ""; popL3();
             document.getElementById('selL3').value = parts[2] || "";
             
-            editingImgs = [...x.imgs]; // 複製現有圖片
-            renderEditImgs(); // 顯示可編輯的圖片列表
+            editingImgs = [...x.imgs]; 
+            renderEditImgs(); 
 
             document.getElementById('modalTitle').innerText = "📝 編輯資料";
             document.getElementById('addM').classList.add('active'); document.getElementById('ov').classList.add('active');
